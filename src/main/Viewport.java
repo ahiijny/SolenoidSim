@@ -1,3 +1,4 @@
+package main;
 import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.Graphics;
@@ -13,14 +14,16 @@ import javax.swing.JPanel;
 public class Viewport extends JPanel 
 {
 	public GraphicUI parent;
+	public Sim sim;
 	public double zoom = 1;
+	public boolean perspective = true;
 	
 	public double plotStep = Math.toRadians(0.05);
 	public Dimension size = new Dimension(450,550);
 	public Point mid = new Point(0,0);
 	
-	public double screen[] = {50, 0, 0};
-	public double camera[] = {500, 0, 0};
+	public double screen[] = {500, 0, 0};
+	public double camera[] = {1000, 0, 0};
 	public double yaxis[] = {0, 1, 0};
 	public double xaxis[] = {0, 0, -1};
 	
@@ -30,12 +33,12 @@ public class Viewport extends JPanel
 	
 	public Color background = Color.white;
 	
-	public Viewport(GraphicUI parent) 
+	public Viewport(GraphicUI parent, Sim sim) 
 	{
 		this.parent = parent;
-		updateRotation();
-		clearScreen();
+		this.sim = sim;		
 		addComponentListener(new ResizeListener());	
+		refresh();
 	}
 	
 	public void clearScreen()
@@ -73,9 +76,8 @@ public class Viewport extends JPanel
              zbuffer = new double[size.width][size.height];
              buffer = new BufferedImage(size.width, size.height, BufferedImage.TYPE_INT_RGB);
              bg = buffer.createGraphics();
-             clearScreen();
+             refresh();
              System.out.println(size);
-             test();
          }
 	}
 	
@@ -87,8 +89,16 @@ public class Viewport extends JPanel
 	 */
 	public boolean rayTrace(double[] X, double[] coords)
 	{
-		// XC is the line connecting point X and the camera		
-		double[] XC = Calc.add(camera, Calc.scale(X, -1));
+		double[] XC;
+		if (perspective)
+		{
+			// XC is the line connecting point X and the camera		
+			XC = Calc.add(camera, Calc.scale(X, -1));
+		}
+		else
+		{
+			XC = screen;
+		}
 					
 		// XM is the line connecting point X with the geometric center of the screen
 		double[] XM = Calc.add(screen, Calc.scale(X, -1));
@@ -118,8 +128,14 @@ public class Viewport extends JPanel
 		// This is only so if the distance to the screen
 		// is less than the distance to the camera
 		
-		return t <= 1;
+		return perspective ? t <= 1 : t > 0;
 	}	
+	
+	public void render()
+	{
+		for (int i = 0; i < sim.objects.size(); i++)
+			render(sim.objects.get(i).getPoints(), sim.objects.get(i).color);
+	}
 	
 	public void render(double[][] points, Color color)
 	{
@@ -142,95 +158,16 @@ public class Viewport extends JPanel
 					{
 						zbuffer[x][y] = distance;
 						bg.fillRect(x, y, 1, 1);
-					}
-					/*
-					int[][] areas = new int[2][2];	// anti-aliasing
-					int left = (int)x;
-					int down = (int)y;
-					double width1 = (left+1)-x;
-					double width2 = x-left;
-					double height1 = (down+1)-y;
-					double height2 = y-down;
-					areas[0][0] = (int)(255 * width1 * height1);
-					areas[0][1] = (int)(255 * width1 * height2);
-					areas[1][0] = (int)(255 * width2 * height1);
-					areas[1][1] = (int)(255 * width2 * height2);
-					int corex = (int)(x + 0.5 - left);
-					int corey = (int)(y + 0.5 - down);
-					areas[corex][corey] = 255;
-					for (int dx = 0; dx < 2; dx++)
-					{
-						for (int dy = 0; dy < 2; dy++)
-						{
-							Point p = new Point(left + dx, down + dy);
-							if (inbounds(p.x, p.y))
-							{
-								if (distance <= zbuffer[p.x][p.y])
-								{
-									if (dx == corex && dy == corey)
-										zbuffer[p.x][p.y] = distance;
-									Color pixel = new Color(buffer.getRGB(p.x, p.y));
-									bg.setColor(Calc.average(color, areas[dx][dy], pixel, 255-areas[dx][dy]));
-									bg.fillRect(p.x, p.y, 1, 1);
-								}
-							}
-						}
-					}	*/				
+					}			
 				}					
 			}
 		}
 	}
 	
-	private void test()
-	{			
-		double[] o = {0,0,0};
-		
-		
-		double[]r1 = {-300, 100, 0};
-		double[]r2 = {-100, -100, 0};
-		double[]r3 = {-300, -100, -200};
-		double[]r4 = {-100, 100, -200};
-		double[]m1 = {1, 0, 0};
-		double[]m2 = {0, 1, 0};
-		double[]m3 = {0, 0, 1};
-		Line a = new Line(r1, m1);
-		Line b = new Line(r1, m2);
-		Line c = new Line(r1, m3);
-		Line d = new Line(r2, m1);
-		Line e = new Line(r2, m2);
-		Line f = new Line(r2, m3);
-		Line g = new Line(r3, m1);
-		Line h = new Line(r3, m2);
-		Line i = new Line(r3, m3);
-		Line j = new Line(r4, m1);
-		Line k = new Line(r4, m2);
-		Line l = new Line(r4, m3);
-		render(a.getPoints(1, 0, 200), Color.red);
-		render(b.getPoints(1, -200, 0), Color.red);
-		render(c.getPoints(1, -200, 0), Color.red);
-		render(d.getPoints(1, -200, 0), Color.orange);
-		render(e.getPoints(1, 0, 200), Color.orange);
-		render(f.getPoints(1, -200, 0), Color.orange);
-		render(g.getPoints(1, 0, 200), Color.green);
-		render(h.getPoints(1, 0, 200), Color.green);
-		render(i.getPoints(1, 0, 200), Color.green);
-		render(j.getPoints(1, -200, 0), Color.blue);
-		render(k.getPoints(1, -200, 0), Color.blue);
-		render(l.getPoints(1, 0, 200), Color.blue);
-		
-		Line x = new Line(o, m1);
-		Line y = new Line(o, m2);
-		Line z = new Line(o, m3);
-		
-		render(x.getPoints(0.5, 0, 400), Color.cyan);
-		render(y.getPoints(0.5, 0, 400), Color.magenta);
-		render(z.getPoints(0.5, 0, 400), Color.lightGray);
-	}
-	
-	public void updateRotation()
+	public void refresh()
 	{
 		clearScreen();
-		test();
+		render();
 		repaint();
 	}
 	
@@ -240,10 +177,34 @@ public class Viewport extends JPanel
 		screen = Matrix.multiply(R, screen);
 		camera = Matrix.multiply(R, camera);
 		xaxis = Calc.unit(Calc.cross(yaxis, screen));
-		Calc.println(xaxis);
-		Calc.println(yaxis);
-		System.out.println("-----------------------------");
-		updateRotation();
+		refresh();
+	}
+	
+	public void xturn(double dtheta)
+	{
+		double[][] R = Matrix.getRotationMatrixX(dtheta);
+		screen = Matrix.multiply(R, screen);
+		camera = Matrix.multiply(R, camera);
+		yaxis = Matrix.multiply(R, yaxis);
+		xaxis = Calc.unit(Calc.cross(yaxis, screen));
+	}
+	
+	public void yturn(double dtheta)
+	{
+		double[][] R = Matrix.getRotationMatrixY(dtheta);
+		screen = Matrix.multiply(R, screen);
+		camera = Matrix.multiply(R, camera);
+		yaxis = Matrix.multiply(R, yaxis);
+		xaxis = Calc.unit(Calc.cross(yaxis, screen));
+	}
+	
+	public void zturn(double dtheta)
+	{
+		double[][] R = Matrix.getRotationMatrixZ(dtheta);
+		screen = Matrix.multiply(R, screen);
+		camera = Matrix.multiply(R, camera);
+		yaxis = Matrix.multiply(R, yaxis);
+		xaxis = Calc.unit(Calc.cross(yaxis, screen));
 	}
 	
 	public void pitch(double dtheta)
@@ -252,10 +213,7 @@ public class Viewport extends JPanel
 		screen = Matrix.multiply(R, screen);
 		camera = Matrix.multiply(R, camera);
 		yaxis = Calc.unit(Calc.cross(screen, xaxis));
-		Calc.println(xaxis);
-		Calc.println(yaxis);
-		System.out.println("-----------------------------");
-		updateRotation();
+		refresh();
 	}
 	
 	public void roll(double dtheta)
@@ -265,10 +223,6 @@ public class Viewport extends JPanel
 		double[][] R = Matrix.getRotationMatrix(Calc.unit(screen), dtheta);
 		yaxis = Matrix.multiply(R, yaxis);
 		xaxis = Calc.unit(Calc.cross(yaxis, screen));
-		
-		Calc.println(xaxis);
-		Calc.println(yaxis);
-		System.out.println("-----------------------------");
-		updateRotation();
+		refresh();
 	}
 }
