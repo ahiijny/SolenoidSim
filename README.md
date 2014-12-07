@@ -1,0 +1,1 @@
+Models the B field of multiple solenoids.
