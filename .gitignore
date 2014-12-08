@@ -2,3 +2,6 @@
 *.class
 *.classpath
 *.project
+*.log
+*.aux
+*.gz
