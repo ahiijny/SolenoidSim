@@ -11,6 +11,11 @@ import java.awt.image.BufferedImage;
 
 import javax.swing.JPanel;
 
+/** The polynomial \(ax^2 + bx + c\).
+ * 
+ * @author Jiayin
+ *
+ */
 public class Viewport extends JPanel 
 {
 	public GraphicUI parent;
@@ -22,10 +27,10 @@ public class Viewport extends JPanel
 	public Dimension size = new Dimension(450,550);
 	public Point mid = new Point(0,0);
 	
-	public double screen[] = {500, 0, 0};
-	public double camera[] = {1000, 0, 0};
+	public double screen[] = {0, 0, 500};
+	public double camera[] = {0, 0, 1000};
 	public double yaxis[] = {0, 1, 0};
-	public double xaxis[] = {0, 0, -1};
+	public double xaxis[] = {1, 0, 0};
 	
 	public double zbuffer[][] = new double[450][550];
 	public BufferedImage buffer = new BufferedImage(450, 550, BufferedImage.TYPE_INT_RGB);

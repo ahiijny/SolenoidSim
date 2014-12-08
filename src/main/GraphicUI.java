@@ -84,7 +84,7 @@ public class GraphicUI extends JFrame
 				for (int k = -200; k <= 200; k += 100)
 				{
 					double[] position = {i, j, k};
-					double[] direction = {i, j, k + i + j};
+					double[] direction = {k, i, j};
 					double zoom = 0.1;
 					double ds = 0.25;
 					sim.add(new Vector(position, direction, zoom, ds));
@@ -133,32 +133,32 @@ public class GraphicUI extends JFrame
 		@Override
 		public void keyPressed(KeyEvent e) 
 		{
-			if (e.getKeyCode() == KeyEvent.VK_W)
+			if (e.getKeyCode() == KeyEvent.VK_NUMPAD2)
 			{
 				viewport.pitch(dtheta);
 				viewport.refresh();
 			}
-			else if (e.getKeyCode() == KeyEvent.VK_X)
+			else if (e.getKeyCode() == KeyEvent.VK_NUMPAD8)
 			{
 				viewport.pitch(-dtheta);
 				viewport.refresh();
 			}
-			else if (e.getKeyCode() == KeyEvent.VK_C)
+			else if (e.getKeyCode() == KeyEvent.VK_NUMPAD3)
 			{
 				viewport.yaw(dtheta);
 				viewport.refresh();
 			}
-			else if (e.getKeyCode() == KeyEvent.VK_Z)
+			else if (e.getKeyCode() == KeyEvent.VK_NUMPAD1)
 			{
 				viewport.yaw(-dtheta);
 				viewport.refresh();
 			}
-			else if (e.getKeyCode() == KeyEvent.VK_D)
+			else if (e.getKeyCode() == KeyEvent.VK_NUMPAD6)
 			{
 				viewport.roll(dtheta);
 				viewport.refresh();
 			}
-			else if (e.getKeyCode() == KeyEvent.VK_A)
+			else if (e.getKeyCode() == KeyEvent.VK_NUMPAD4)
 			{
 				viewport.roll(-dtheta);
 				viewport.refresh();

@@ -1,26 +1,37 @@
 package main;
 
-/** http://en.wikipedia.org/wiki/Rotation_matrix
+/** Static class that performs various matrix operations.
+ * Referenced rotation matrices from: http://en.wikipedia.org/wiki/Rotation_matrix
+ * All rotation is based on a right-handed system. If y is pointing up on your screen
+ * and x is pointing right, then z is pointing right at you out of the screen.
+ * <p>
+ * For succinctness, these methods do not verify inputs. If the programmer tries
+ * to multiply two matrices together whose dimensions don't match up properly,
+ * they might get a nice ArrayIndexOutOfBoundsException. 
  */
 public class Matrix 
 {
-
 	/** Returns the rotation matrix for the specified rotation about
-	 * the given unit vector u.
+	 * the given unit vector u. The vector u must have length one and
+	 * dimension R3. The rotation is counterclockwise when looking towards
+	 * the origin, in the opposite direction of the unit vector.
 	 * 
-	 * @param u
-	 * @param theta		angle in radians
-	 * @return
+	 * @param u			the unit vector representing the rotation axis
+	 * @param theta		angle of rotation (radians)
+	 * @return the rotation matrix representing the specified rotation
 	 */
 	public static double[][] getRotationMatrix(double[] u, double theta)
 	{
+		// Variables
+		
+		double[][] R = new double[3][3];
 		double sin = Math.sin(theta);
 		double cos = Math.cos(theta);
 		double ux = u[0];
 		double uy = u[1];
 		double uz = u[2];
 		
-		double[][] R = new double[3][3];
+		// Copying down the matrix entries from Wikipedia
 		
 		R[0][0] = cos + ux*ux*(1-cos);
 		R[1][0] = uy*ux*(1-cos) + uz*sin;
@@ -35,11 +46,20 @@ public class Matrix
 		return R;
 	}
 	
+	/** Returns the rotation matrix for a rotation about the x-axis.
+	 * 
+	 * @param theta		the rotation angle (radians)
+	 * @return the rotation matrix representing the specified rotation
+	 */
 	public static double[][] getRotationMatrixX(double theta)
 	{
+		// Variables
+		
 		double sin = Math.sin(theta);
 		double cos = Math.cos(theta);
 		double[][] R = new double[3][3];
+		
+		// Copying down the matrix entries from Wikipedia
 		
 		R[0][0] = 1;
 		R[0][1] = 0;
@@ -54,11 +74,20 @@ public class Matrix
 		return R;
 	}
 	
+	/** Returns the rotation matrix for a rotation about the y-axis.
+	 * 
+	 * @param theta		the rotation angle (radians)
+	 * @return the rotation matrix representing the specified rotation
+	 */
 	public static double[][] getRotationMatrixY(double theta)
 	{
+		// Variables
+		
 		double sin = Math.sin(theta);
 		double cos = Math.cos(theta);
 		double[][] R = new double[3][3];
+		
+		// Copying down the matrix entries from Wikipedia
 		
 		R[0][0] = cos;
 		R[0][1] = 0;
@@ -73,11 +102,20 @@ public class Matrix
 		return R;
 	}
 	
+	/** Returns the rotation matrix for a rotation about the z-axis.
+	 * 
+	 * @param theta		the rotation angle (radians)
+	 * @return the rotation matrix representing the specified rotation
+	 */
 	public static double[][] getRotationMatrixZ(double theta)
 	{
+		// Variables
+		
 		double sin = Math.sin(theta);
 		double cos = Math.cos(theta);
 		double[][] R = new double[3][3];
+		
+		// Copying down the matrix entries from Wikipedia
 		
 		R[0][0] = cos;
 		R[0][1] = -sin;
@@ -92,6 +130,12 @@ public class Matrix
 		return R;
 	}
 	
+	/** Converts the given vector (array of doubles) into
+	 * the corresponding column matrix (array of array of doubles).
+	 * 
+	 * @param a		the vector
+	 * @return the matrix of dimensions [R x 1] where R is the vector dimension
+	 */
 	public static double[][] getColumnMatrix(double[] a)
 	{
 		double[][] X = new double[a.length][1];
@@ -102,6 +146,12 @@ public class Matrix
 		return X;
 	}
 	
+	/** Converts the given column matrix (array of array of doubles)
+	 * into the corresponding vector (array of doubles).
+	 * 
+	 * @param X		the column matrix of dimensions [R x 1] where R is the vector dimension
+	 * @return the vector of dimension R
+	 */
 	public static double[] getColumnVector(double[][] X)
 	{
 		double[] a = new double[X.length];
@@ -112,6 +162,12 @@ public class Matrix
 		return a;
 	}
 			
+	/** Left multiplies the matrix A with B.
+	 * 
+	 * @param A		the left matrix
+	 * @param B		the right matrix
+	 * @return the product matrix AB
+	 */
 	public static double[][] multiply(double[][] A, double[][] B)
 	{
 		int rA = A.length;
@@ -135,12 +191,20 @@ public class Matrix
 		return C;
 	}
 	
+	/** Left multiplies the matrix R (usually a rotation matrix) with
+	 * the given vector. This method automatically converts the
+	 * vector into a column matrix to do the multiplication, and
+	 * then converts the product back into a vector so that it can
+	 * be returned to the caller of this method.
+	 * 
+	 * @param R		the matrix
+	 * @param a		the vector
+	 * @return	the vector corresponding with the product Ra 
+	 */
 	public static double[] multiply(double[][] R, double[] a)
 	{
 		double[][] X = getColumnMatrix(a);
 		X = multiply(R, X);
 		return getColumnVector(X);
 	}
-	
-
 }
