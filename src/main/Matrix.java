@@ -207,4 +207,45 @@ public class Matrix
 		X = multiply(R, X);
 		return getColumnVector(X);
 	}
+	
+	public static double[][] add(double[][] A, double[][] B)
+	{
+		double[][] C = new double[A.length][A[0].length];
+		
+		for (int i = 0; i < C.length; i++)
+			for (int j = 0; j < C[i].length; j++)
+				C[i][j] = A[i][j] + B[i][j];
+		
+		return C;
+	}
+	
+	public static double[][] scale(double[][] A, double scalar)
+	{
+		for (int i = 0; i < A.length; i++)
+			for (int j = 0; j < A[i].length; j++)
+				A[i][j] *= scalar;
+		
+		return A;
+	}
+	
+	public static double[][] getSkewSymmetricCrossProductMatrix(double[] a)
+	{
+		double[] row1 = {0, -a[2], a[1]};
+		double[] row2 = {a[2], 0, -a[0]};
+		double[] row3 = {-a[1], a[0], 0};
+		
+		double[][] VX = {row1, row2, row3};
+		
+		return VX;
+	}
+	
+	public static double[][] getIdentityMatrix(int dimension)
+	{
+		double[][] I = new double[dimension][dimension];
+		for (int i = 0; i < I.length; i++)
+			for (int j = 0; j < I[i].length; j++)
+				I[i][j] = i == j ? 1 : 0;
+		
+		return I;
+	}
 }

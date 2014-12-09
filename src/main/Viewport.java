@@ -18,17 +18,22 @@ import javax.swing.JPanel;
  */
 public class Viewport extends JPanel 
 {
+	public static final double defaultScreen = 200;
+	public static final double defaultCamera = 400;
+	public static final double defaultZoom = 2;
+	public static final double defaultPlotStep = 0.5;
+	
 	public GraphicUI parent;
 	public Sim sim;
-	public double zoom = 1;
+	public double zoom = 2;
+	public double plotStep = 0.5;
 	public boolean perspective = true;
-	
-	public double plotStep = Math.toRadians(0.05);
+		
 	public Dimension size = new Dimension(450,550);
 	public Point mid = new Point(0,0);
 	
-	public double screen[] = {0, 0, 500};
-	public double camera[] = {0, 0, 1000};
+	public double screen[] = {0, 0, 200};
+	public double camera[] = {0, 0, 400};
 	public double yaxis[] = {0, 1, 0};
 	public double xaxis[] = {1, 0, 0};
 	
@@ -86,6 +91,39 @@ public class Viewport extends JPanel
          }
 	}
 	
+	public void render()
+	{
+		for (int i = 0; i < sim.objects.size(); i++)
+			render(sim.objects.get(i).getPoints(plotStep), sim.objects.get(i).color);
+	}
+	
+	public void render(double[][] points, Color color)
+	{
+		bg.setColor(color);
+				
+		for (int i = 0; i < points.length; i++)
+		{
+			double[] point = new double[3];
+			boolean valid = rayTrace(points[i], point);
+			
+			if (valid)
+			{
+				int x = (int)((zoom*(point[0] + 0.5) + size.width/2)+0.5);
+				int y = (int)((zoom*(point[1] + 0.5) + size.height/2)+0.5);								
+				double distance = point[2];
+				
+				if (inbounds(x, y))
+				{						
+					if (distance <= zbuffer[x][y])
+					{
+						zbuffer[x][y] = distance;
+						bg.fillRect(x, y, 1, 1);
+					}			
+				}					
+			}
+		}
+	}
+	
 	/** Using the Viewport's current settings, projects the
 	 * specified point onto the screen, based on the camera.
 	 * 
@@ -133,47 +171,35 @@ public class Viewport extends JPanel
 		// This is only so if the distance to the screen
 		// is less than the distance to the camera
 		
-		return perspective ? t <= 1 : t > 0;
+		return perspective ? t <= 1 && t >= 0 : t > 0;
 	}	
-	
-	public void render()
-	{
-		for (int i = 0; i < sim.objects.size(); i++)
-			render(sim.objects.get(i).getPoints(), sim.objects.get(i).color);
-	}
-	
-	public void render(double[][] points, Color color)
-	{
-		bg.setColor(color);
-				
-		for (int i = 0; i < points.length; i++)
-		{
-			double[] point = new double[3];
-			boolean valid = rayTrace(points[i], point);
-			
-			if (valid)
-			{
-				int x = (int)(zoom * ((point[0] + 0.5) + size.width/2)+0.5);
-				int y = (int)(zoom * ((point[1] + 0.5) + size.height/2)+0.5);								
-				double distance = point[2];
-				
-				if (inbounds(x, y))
-				{						
-					if (distance <= zbuffer[x][y])
-					{
-						zbuffer[x][y] = distance;
-						bg.fillRect(x, y, 1, 1);
-					}			
-				}					
-			}
-		}
-	}
 	
 	public void refresh()
 	{
 		clearScreen();
 		render();
 		repaint();
+	}
+	
+	public void scaleCamera(double scalar)
+	{
+		camera = Calc.scale(camera, scalar);
+		System.out.print ("Camera = ");
+		Calc.println(camera);
+	}
+	
+	public void scaleScreen(double scalar)
+	{
+		screen = Calc.scale(screen, scalar);
+		System.out.print ("Screen = ");
+		Calc.println(screen);
+	}
+	
+	public void defaultScale()
+	{
+		camera = Calc.scale(Calc.unit(camera), defaultCamera);
+		screen = Calc.scale(Calc.unit(screen), defaultScreen);
+		zoom = defaultZoom;		
 	}
 	
 	public void yaw(double dtheta)
@@ -223,11 +249,10 @@ public class Viewport extends JPanel
 	
 	public void roll(double dtheta)
 	{
-		Calc.println(Calc.unit(screen));
-		//double[][] R = Matrix.getRotationMatrixX(-dtheta);
 		double[][] R = Matrix.getRotationMatrix(Calc.unit(screen), dtheta);
 		yaxis = Matrix.multiply(R, yaxis);
 		xaxis = Calc.unit(Calc.cross(yaxis, screen));
 		refresh();
 	}
 }
+
