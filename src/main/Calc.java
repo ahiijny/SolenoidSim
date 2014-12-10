@@ -1,5 +1,7 @@
 package main;
 
+import java.text.DecimalFormat;
+
 /** Static class that performs various math operations. For succinctness,
  * does not verify inputs. If the programmer inputs a vector of the wrong
  * dimension into a method, they'll get a nice ArrayIndexOutOfBoundsException.
@@ -10,6 +12,9 @@ package main;
  */
 public class Calc 
 {			
+	public static DecimalFormat large = new DecimalFormat("0.000E0");
+	public static DecimalFormat small = new DecimalFormat("0.00");
+	public static DecimalFormat precise = new DecimalFormat("0.############");
 	
 	/** Returns the cross product of a and b. Must be in R3.
 	 * 

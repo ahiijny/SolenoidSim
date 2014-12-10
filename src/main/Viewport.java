@@ -20,7 +20,7 @@ public class Viewport extends JPanel
 {
 	public static final double defaultScreen = 200;
 	public static final double defaultCamera = 509.1;
-	public static final double defaultZoom = 2;
+	public static final double defaultScale = 2;
 	public static final double defaultPlotStep = 0.5;
 	
 	public static final double maxFOV = Math.toRadians(121);
@@ -28,7 +28,8 @@ public class Viewport extends JPanel
 	
 	public GraphicUI parent;
 	public Sim sim;
-	public double zoom = 2;
+	public double zoom = 200;
+	public double scale = 2;
 	public double plotStep = 0.5;
 	public boolean perspective = true;
 		
@@ -51,10 +52,10 @@ public class Viewport extends JPanel
 	public Viewport(GraphicUI parent, Sim sim) 
 	{
 		this.parent = parent;
-		this.sim = sim;		
+		this.sim = sim;	
+		enforceFOV();
+		refresh();	
 		addComponentListener(new ResizeListener());
-		enforceFov();
-		refresh();		
 	}
 	
 	public void clearScreen()
@@ -114,8 +115,8 @@ public class Viewport extends JPanel
 			
 			if (valid)
 			{
-				int x = (int)((zoom*(point[0] + 0.5) + size.width/2)+0.5);
-				int y = (int)((zoom*(point[1] + 0.5) + size.height/2)+0.5);								
+				int x = (int)((scale*(point[0] + 0.5) + size.width/2)+0.5);
+				int y = (int)((scale*(point[1] + 0.5) + size.height/2)+0.5);								
 				double distance = point[2];
 				
 				if (inbounds(x, y))
@@ -127,7 +128,7 @@ public class Viewport extends JPanel
 					}			
 				}					
 			}
-		}
+		}		
 	}
 	
 	/** Using the Viewport's current settings, projects the
@@ -197,8 +198,16 @@ public class Viewport extends JPanel
 	public void scaleScreen(double scalar)
 	{
 		screen = Calc.scale(screen, scalar);
+		zoom *= scalar;
 		System.out.print ("Screen = ");
 		Calc.println(screen);
+	}
+	
+	public void setZoom(double newZoom)
+	{
+		screen = Calc.scale(screen, newZoom / Calc.mag(screen));
+		zoom = Calc.mag(screen);
+		enforceFOV();
 	}
 	
 	public void incrementFOV(double increment)
@@ -212,12 +221,13 @@ public class Viewport extends JPanel
 	{
 		camera = Calc.scale(Calc.unit(camera), defaultCamera);
 		screen = Calc.scale(Calc.unit(screen), defaultScreen);
-		zoom = defaultZoom;		
+		scale = defaultScale;
+		zoom = defaultScreen;
 	}
 	
-	public void enforceFov()
+	public void enforceFOV()
 	{
-		double screenWidth = size.width/zoom;
+		double screenWidth = size.width/scale;
 		double distance = screenWidth /(2 * Math.tan(fov/2));
 		if (!Double.isNaN(distance) && distance != 0)
 		{

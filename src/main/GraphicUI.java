@@ -51,10 +51,6 @@ public class GraphicUI extends JFrame
 	public Viewport viewport;
 	public Sim sim;
 	public int width, height;
-	private Timer timer;
-	private int keyboardDelay = 50;	
-	private HashSet<String> pressedKeys;
-	private boolean sneaking = false;
 	
 	public double dtheta = Math.PI / 30;
 	/** The rotation angle is divided by this factor during
@@ -66,17 +62,29 @@ public class GraphicUI extends JFrame
 	public double fovIncrement = Math.toRadians(10);
 	
 	public JComboBox<String> entitySel;
+	public JComboBox<String> rkSel;
 	public String[] specLabels = {"rx", "ry", "rz", "dx", "dy", "dz", "Current", "Length", "Radius", "Turns"};
+	public String[] propagatorLabels = {"Runge-Kutta, 1st order (RK1)", 
+			"Runge-Kutta, 2nd order (RK2)",								
+			"Runge-Kutta, 4th order (RK4)"};
 	public JTextField[] wireSpecs;
-	public JButton specsBut, simBut;
+	public JTextField simStep, zoom, scale, plotStep;	
+	public JButton specsBut, simBut, simStepBut, zoomBut, scaleBut, plotStepBut;
+	
 	public double[][] lattice;
-	public Wire wire;
+	public Wire wire;		
+	
+	private Timer timer;
+	private int keyboardDelay = 50;	
+	private HashSet<String> pressedKeys;
+	private boolean sneaking = false;
 
 	public GraphicUI(String title, int width, int height)
 	{
 		super(title);
 		
-		sim = new Sim(this);		
+		sim = new Sim(this);	
+		viewport = new Viewport(this, sim);
 		pressedKeys = new HashSet<String>();
 		timer = new Timer(keyboardDelay, new KeyboardAction());
 		timer.setInitialDelay(0);
@@ -89,11 +97,11 @@ public class GraphicUI extends JFrame
 		setKeyBindings();
 		initSim();
 
-		setDefaultCloseOperation (JFrame.EXIT_ON_CLOSE);	
+		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);	
 		setSize(width, height);	
 		setVisible(true);
 		
-		refresh();
+		simulate();		
 	}
 	
 	private JPanel createContent()
@@ -104,7 +112,7 @@ public class GraphicUI extends JFrame
 		content.add(createLeftPanel(),BorderLayout.WEST);
 		//content.add(createRightPanel(),BorderLayout.EAST);
 		//content.add(createTopPanel(),BorderLayout.NORTH);
-		//content.add(createBottomPanel(),BorderLayout.SOUTH);
+		content.add(createBottomPanel(),BorderLayout.SOUTH);
 		
 		content.addMouseListener(new MyMouseListener());
 		content.addMouseMotionListener(new MyMouseListener());
@@ -114,8 +122,7 @@ public class GraphicUI extends JFrame
 	}
 	
 	private JPanel createMiddlePanel()
-	{
-		viewport = new Viewport(this, sim);
+	{		
 		return viewport;
 	}
 	
@@ -201,7 +208,64 @@ public class GraphicUI extends JFrame
 	
 	private JPanel createBottomPanel()
 	{
-		return null;
+JPanel bottom = new JPanel(new BorderLayout());					
+		
+		// Simulation
+		
+		JPanel row2 = new JPanel();
+		
+		JLabel label = new JLabel("Integrator: ");		
+		
+		rkSel = new JComboBox<String>();
+		rkSel.setPreferredSize(new Dimension(170, 20));
+		for (int i = 0; i < propagatorLabels.length; i++)			
+			rkSel.addItem(propagatorLabels[i]);		
+		rkSel.setSelectedIndex(Sim.RK4);
+		rkSel.addActionListener(new MyListener());		
+		row2.add(label);
+		row2.add(rkSel);
+						
+		label = new JLabel("Sim step (s):");		
+		simStep = new JTextField();
+		simStep.setColumns(5);		
+		simStepBut = new JButton("Set");
+		simStepBut.addActionListener(new MyListener());		
+		row2.add(label);
+		row2.add(simStep);
+		row2.add(simStepBut);
+		
+		// Display
+		
+		label = new JLabel("Zoom:");
+		zoom = new JTextField();
+		zoom.setColumns(5);		
+		zoomBut = new JButton("Set");
+		zoomBut.addActionListener(new MyListener());		
+		row2.add(label);
+		row2.add(zoom);
+		row2.add(zoomBut);
+		
+		label = new JLabel("Upscale:");
+		scale = new JTextField();
+		scale.setColumns(6);
+		scaleBut = new JButton("Set");
+		scaleBut.addActionListener(new MyListener());		
+		row2.add(label);
+		row2.add(scale);
+		row2.add(scaleBut);
+
+		label = new JLabel("Plot step:");
+		plotStep = new JTextField();
+		plotStep.setColumns(5);
+		plotStepBut = new JButton("Set");
+		plotStepBut.addActionListener(new MyListener());
+		row2.add(label);
+		row2.add(plotStep);
+		row2.add(plotStepBut);
+		 
+		bottom.add(row2, BorderLayout.WEST);
+		
+		return bottom;
 	}
 	
 	private void gridBagAdd(JPanel panel, GridBagConstraints c, int x, int y, JComponent comp)
@@ -373,8 +437,6 @@ public class GraphicUI extends JFrame
 			for (int j = -100; j <= 100; j += 50)
 				for (int k = -100; k <= 100; k += 50)				
 					lattice[counter++] = new double[] {i, j, k};		
-		
-		sim.simulate(lattice);	
 	}
 	
 	private void setKeyBindings()
@@ -507,6 +569,7 @@ public class GraphicUI extends JFrame
     	viewport.refresh();
     	viewport.requestFocusInWindow();
     	refreshInFields();
+    	refreshOtherFields();
     }
     
     public void refreshInFields()
@@ -537,6 +600,14 @@ public class GraphicUI extends JFrame
     		}
     	}
     }
+    
+    public void refreshOtherFields()
+	{
+    	simStep.setText(Calc.small.format(sim.dt));
+    	zoom.setText(Calc.small.format(viewport.zoom));
+		scale.setText(Calc.small.format(viewport.scale));
+		plotStep.setText(Calc.small.format(viewport.plotStep));		
+	}
     
     public void simulate()
     {
@@ -633,6 +704,67 @@ public class GraphicUI extends JFrame
 		sim.vectors.clear();
 		refresh();
 	}	
+	
+	public void setPropagator(int rk)
+	{
+		sim.integrationMethod = rk;
+	}
+	
+	public void setSimStep()
+	{
+		try
+		{
+			double newStep = Double.parseDouble(simStep.getText());
+			sim.dt = newStep;
+			simulate();
+		}
+		catch (Exception e)
+		{
+			refreshOtherFields();
+		}		
+	}
+	
+	public void setZoom()
+	{
+		try
+		{
+			double newZoom = Double.parseDouble(zoom.getText());
+			viewport.setZoom(newZoom);
+			refresh();			
+		}
+		catch (Exception e)
+		{
+			refreshOtherFields();
+		}		
+	}
+	
+	public void setScale()
+	{
+		try
+		{
+			double newScale = Double.parseDouble(scale.getText());
+			viewport.scale = newScale;
+			refresh();
+		}
+		catch (Exception e)
+		{
+			refreshOtherFields();
+		}	
+	}
+	
+	public void setPlotStep()
+	{
+		try
+		{
+			double newStep = Double.parseDouble(plotStep.getText());
+			viewport.plotStep = newStep;
+			refresh();
+		}
+		catch (Exception e)
+		{
+			refreshOtherFields();
+		}	
+	}
 		
 	private class MyListener implements ActionListener
 	{
@@ -643,17 +775,26 @@ public class GraphicUI extends JFrame
 			if (parent instanceof JButton)
 			{
 				JButton button = (JButton)parent;
-				String text = button.getText();
-				if (text.equals("Update"))
+				if (button.equals(specsBut))
 					setWireSpecs();
-				else if (text.equals("Simulate"))
+				else if (button.equals(simBut))
 					simulate();
+				else if (button.equals(simStepBut))
+					setSimStep();
+				else if (button.equals(zoomBut))
+					setZoom();
+				else if (button.equals(scaleBut))
+					setScale();
+				else if (button.equals(plotStepBut))
+					setPlotStep();
 			}
 			else if (parent instanceof JComboBox)
 			{
 				JComboBox<String> combo = (JComboBox<String>)parent;
 				if (combo.equals(entitySel))
 					setEntitySel();
+				else if (combo.equals(rkSel))
+					setPropagator(combo.getSelectedIndex());
 			}
 		}		
 	}
@@ -704,36 +845,36 @@ public class GraphicUI extends JFrame
 				else if (name.equals("Zoom in"))
 				{
 					viewport.scaleScreen(1/dzoom);
-					viewport.enforceFov();
+					viewport.enforceFOV();
 					refresh();					
 				}
 				else if (name.equals("Zoom out"))
 				{
 					viewport.scaleScreen(dzoom);
-					viewport.enforceFov();
+					viewport.enforceFOV();
 					refresh();
 				}
 				else if (name.equals("Scale up"))
 				{
-					viewport.zoom *= dzoom;
+					viewport.scale *= dzoom;
 					refresh();					
 				}
 				else if (name.equals("Scale down"))
 				{
-					viewport.zoom /= dzoom;
+					viewport.scale /= dzoom;
 					refresh();
 					
 				}
 				else if (name.equals("Increase FOV"))
 				{
 					viewport.incrementFOV(dfov);
-					viewport.enforceFov();
+					viewport.enforceFOV();
 					refresh();
 				}
 				else if (name.equals("Decrease FOV"))
 				{
 					viewport.incrementFOV(-dfov);
-					viewport.enforceFov();
+					viewport.enforceFOV();
 					refresh();
 				}
 				else if (name.equals("Default zoom"))

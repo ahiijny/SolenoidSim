@@ -13,7 +13,7 @@ public class SolenoidSim
 		catch (Exception e)
 		{			
 		}
-		new GraphicUI("become the literally i know lives", 640, 480);
+		new GraphicUI("become the literally i know lives", 900, 500);
 	}
 
 }

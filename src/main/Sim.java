@@ -34,10 +34,8 @@ public class Sim
 	
 	public int integrationMethod = RK4;
 	
-	public double dt = 0.5;
-	
-	public double maxB = 0;
-	
+	public double dt = 0.5;	
+	public double maxB = 0;	
 	public double maxScale = 100;
 	
 	public static final double[][][] butcherTableau = 
