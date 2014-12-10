@@ -8,4 +8,10 @@ public abstract class Entity
 	public abstract double[][] getPoints(double ds);
 	
 	public abstract int getPointCount(double ds);
+	
+	@Override
+	public String toString()
+	{
+		return getClass().getSimpleName() + " " + Integer.toHexString(hashCode());
+	}
 }

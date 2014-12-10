@@ -19,9 +19,12 @@ import javax.swing.JPanel;
 public class Viewport extends JPanel 
 {
 	public static final double defaultScreen = 200;
-	public static final double defaultCamera = 400;
+	public static final double defaultCamera = 509.1;
 	public static final double defaultZoom = 2;
 	public static final double defaultPlotStep = 0.5;
+	
+	public static final double maxFOV = Math.toRadians(121);
+	public static final double minFOV = Math.toRadians(9);
 	
 	public GraphicUI parent;
 	public Sim sim;
@@ -32,8 +35,10 @@ public class Viewport extends JPanel
 	public Dimension size = new Dimension(450,550);
 	public Point mid = new Point(0,0);
 	
+	public double fov = Math.toRadians(40);
+	
 	public double screen[] = {0, 0, 200};
-	public double camera[] = {0, 0, 400};
+	public double camera[] = {0, 0, 509.1};
 	public double yaxis[] = {0, 1, 0};
 	public double xaxis[] = {1, 0, 0};
 	
@@ -47,8 +52,9 @@ public class Viewport extends JPanel
 	{
 		this.parent = parent;
 		this.sim = sim;		
-		addComponentListener(new ResizeListener());	
-		refresh();
+		addComponentListener(new ResizeListener());
+		enforceFov();
+		refresh();		
 	}
 	
 	public void clearScreen()
@@ -195,11 +201,29 @@ public class Viewport extends JPanel
 		Calc.println(screen);
 	}
 	
+	public void incrementFOV(double increment)
+	{
+		double newFOV = fov + increment;
+		fov = (minFOV <= newFOV && newFOV <= maxFOV) ? newFOV : fov;
+		System.out.println("FOV = " + Math.toDegrees(fov));
+	}
+	
 	public void defaultScale()
 	{
 		camera = Calc.scale(Calc.unit(camera), defaultCamera);
 		screen = Calc.scale(Calc.unit(screen), defaultScreen);
 		zoom = defaultZoom;		
+	}
+	
+	public void enforceFov()
+	{
+		double screenWidth = size.width/zoom;
+		double distance = screenWidth /(2 * Math.tan(fov/2));
+		if (!Double.isNaN(distance) && distance != 0)
+		{
+			double screen_r = Calc.mag(screen);
+			camera = Calc.scale(screen, (screen_r + distance) / screen_r);
+		}
 	}
 	
 	public void yaw(double dtheta)

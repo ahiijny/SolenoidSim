@@ -2,6 +2,11 @@ package main;
 
 import java.awt.BorderLayout;
 import java.awt.Color;
+import java.awt.Dimension;
+import java.awt.Font;
+import java.awt.GridBagConstraints;
+import java.awt.GridBagLayout;
+import java.awt.Insets;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.InputEvent;
@@ -15,13 +20,18 @@ import java.util.HashSet;
 import javax.swing.AbstractAction;
 import javax.swing.ActionMap;
 import javax.swing.InputMap;
+import javax.swing.JButton;
+import javax.swing.JComboBox;
+import javax.swing.JComponent;
 import javax.swing.JFrame;
+import javax.swing.JLabel;
 import javax.swing.JMenu;
 import javax.swing.JMenuBar;
 import javax.swing.JMenuItem;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JSeparator;
+import javax.swing.JTextField;
 import javax.swing.KeyStroke;
 import javax.swing.Timer;
 
@@ -51,14 +61,19 @@ public class GraphicUI extends JFrame
 	 * fine-tuning in the rotation of the viewport. 
 	 */
 	public double sneakFactor = 10;
-	public double zoomInFactor = 1.25;	
+	public double zoomInFactor = 1.25;
+	public double fovIncrement = Math.toRadians(10);
+	
+	public JComboBox<String> entitySel;
+	String[] specLabels = {"rx", "ry", "rz", "dx", "dy", "dz", "Current", "Length", "Radius", "Turns"};
+	public JTextField[] wireSpecs;
+	public JButton specsBut;
 
 	public GraphicUI(String title, int width, int height)
 	{
 		super(title);
 		
-		sim = new Sim();
-		viewport = new Viewport(this, sim);
+		sim = new Sim(this);		
 		pressedKeys = new HashSet<String>();
 		timer = new Timer(keyboardDelay, new KeyboardAction());
 		timer.setInitialDelay(0);
@@ -81,12 +96,144 @@ public class GraphicUI extends JFrame
 	private JPanel createContent()
 	{
 		JPanel content = new JPanel(new BorderLayout());
-		content.add(viewport, BorderLayout.CENTER);
+		
+		content.add(createMiddlePanel(),BorderLayout.CENTER);
+		content.add(createLeftPanel(),BorderLayout.WEST);
+		//content.add(createRightPanel(),BorderLayout.EAST);
+		//content.add(createTopPanel(),BorderLayout.NORTH);
+		//content.add(createBottomPanel(),BorderLayout.SOUTH);
+		
 		content.addMouseListener(new MyMouseListener());
 		content.addMouseMotionListener(new MyMouseListener());
 		content.addKeyListener(new MyKeyListener());
 		
 		return content;		
+	}
+	
+	private JPanel createMiddlePanel()
+	{
+		viewport = new Viewport(this, sim);
+		return viewport;
+	}
+	
+	private JPanel createRightPanel()
+	{
+		return null;
+	}
+	
+	private JPanel createLeftPanel()
+	{
+		JPanel leftpane = new JPanel(new BorderLayout());
+		JPanel inpane = new JPanel(new GridBagLayout());
+		JButton button; 
+		JLabel label;
+		GridBagConstraints c = new GridBagConstraints();
+		c.insets = new Insets(2,4,2,4);
+		
+		// Input data
+		
+		entitySel = new JComboBox<String>();
+		entitySel.setPreferredSize(new Dimension(200, 20));
+		entitySel.addActionListener(new MyListener());
+		
+		gridBagAdd(inpane, c, 0, 0, new JLabel("Select wire:"));
+		gridBagAdd(inpane, c, 0, 1, 2, GridBagConstraints.CENTER, entitySel);
+		
+		// Input fields
+		
+		wireSpecs = new JTextField[specLabels.length];
+		
+		for (int i = 0; i < wireSpecs.length; i++)
+		{	
+			System.out.println(c.gridy);
+			if (i == 0)
+			{
+				separator(inpane, c);
+				
+				label = new JLabel("Position:");
+				gridBagAdd(inpane, c, 0, ++c.gridy, label);
+			}
+			else if (i == 3)
+			{
+				separator(inpane, c);
+				
+				label = new JLabel("Direction:");
+				gridBagAdd(inpane, c, 0, ++c.gridy, label);
+			}
+			else if (i == 6)
+			{
+				separator(inpane, c);
+				
+				label = new JLabel("Other Parameters:");
+				gridBagAdd(inpane, c, 0, ++c.gridy, label);
+			}
+			
+			wireSpecs[i] = new JTextField();
+			wireSpecs[i].setColumns(15);
+			
+			label = new JLabel(specLabels[i]);
+			label.setFont(new Font("Courier New", Font.PLAIN, 12));
+			
+			gridBagAdd(inpane, c, 0, ++c.gridy, label);
+			gridBagAdd(inpane, c, 1, c.gridy, wireSpecs[i]);
+		}						
+		specsBut = new JButton("Update");
+		specsBut.addActionListener(new MyListener());
+		
+		gridBagAdd(inpane, c, 0, ++c.gridy, 2, GridBagConstraints.CENTER, specsBut);
+		
+		// Add panels
+		
+		leftpane.add(inpane, BorderLayout.CENTER);
+		
+		return leftpane;
+	}
+	
+	private JPanel createTopPanel()
+	{
+		return null;
+	}
+	
+	private JPanel createBottomPanel()
+	{
+		return null;
+	}
+	
+	private void gridBagAdd(JPanel panel, GridBagConstraints c, int x, int y, JComponent comp)
+	{
+		gridBagAdd(panel, c, x, y, 1, GridBagConstraints.FIRST_LINE_START, comp);
+		
+	}
+	
+	private void gridBagAdd(JPanel panel, GridBagConstraints c, int x, int y, int width, int align, JComponent comp)
+	{
+		c.gridx = x;
+		c.gridy = y;
+		c.gridwidth = width;
+		c.anchor = align;		
+		panel.add(comp, c);
+		
+		System.out.println(x + "," + y);
+	}
+	
+	private void separator(JPanel panel, GridBagConstraints c)
+	{
+		c.gridy++;
+		c.gridwidth = 2;
+		c.gridx = 0;
+		JSeparator sep = new JSeparator();
+		//sep.setPreferredSize(new Dimension(100, 20));
+		c.fill = GridBagConstraints.HORIZONTAL;
+		panel.add(sep, c);
+		c.fill = GridBagConstraints.NONE;
+		c.gridwidth = 1;		
+	}
+	
+	public void updateEntitySel()
+	{
+		entitySel.removeAllItems();
+		for (int i = 0; i < sim.wires.size(); i++)
+			entitySel.addItem(sim.wires.get(i).toString());
 	}
 	
 	private JMenuBar createMenuBar()
@@ -147,35 +294,35 @@ public class GraphicUI extends JFrame
 		view.setMnemonic('v');	
 		
 		button = new JMenuItem ("Zoom in");
-		button.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_F9, 0));
-		button.addActionListener (new MenuListener());
-		view.add(button);
-		
-		button = new JMenuItem ("Zoom out");
-		button.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_F8, 0));
-		button.addActionListener (new MenuListener());
-		view.add(button);
-		
-		button = new JMenuItem ("Move screen in");
 		button.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_EQUALS, 0));
 		button.addActionListener (new MenuListener());
 		view.add(button);
 		
-		button = new JMenuItem ("Move screen out");
+		button = new JMenuItem ("Zoom out");
 		button.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_MINUS, 0));
 		button.addActionListener (new MenuListener());
 		view.add(button);
 		
-		button = new JMenuItem ("Move camera in");
-		button.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_W, 0));
+		button = new JMenuItem ("Scale up");
+		button.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_F9, 0));
 		button.addActionListener (new MenuListener());
 		view.add(button);
 		
-		button = new JMenuItem ("Move camera out");
-		button.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_S, 0));
+		button = new JMenuItem ("Scale down");
+		button.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_F8, 0));
 		button.addActionListener (new MenuListener());
 		view.add(button);
 		
+		button = new JMenuItem ("Decrease FOV");
+		button.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_PERIOD, 0));
+		button.addActionListener (new MenuListener());
+		view.add(button);
+		
+		button = new JMenuItem ("Increase FOV");
+		button.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_COMMA, 0));
+		button.addActionListener (new MenuListener());
+		view.add(button);		
+				
 		button = new JMenuItem ("Default zoom");
 		button.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_BACK_SLASH, 0));
 		button.addActionListener (new MenuListener());
@@ -402,7 +549,21 @@ public class GraphicUI extends JFrame
 		public void mouseMoved(MouseEvent e) {
 			repaint();
 		}		
-	}		
+	}
+	
+	private class MyListener implements ActionListener
+	{
+		@Override
+		public void actionPerformed(ActionEvent e) 
+		{
+			Object parent = e.getSource();
+			if (parent instanceof JComboBox)
+			{
+				
+			}
+		}
+		
+	}
 		
 	private class MyKeyListener implements KeyListener
 	{
@@ -438,6 +599,7 @@ public class GraphicUI extends JFrame
 				JMenuItem button = (JMenuItem) parent;
 				String name = button.getText();
 				double dzoom = sneaking ? ((zoomInFactor - 1) / sneakFactor) + 1 : zoomInFactor;
+				double dfov = sneaking ? fovIncrement / sneakFactor : fovIncrement;
 				if (name.equals("Exit"))
 				{					
 					close();
@@ -448,32 +610,37 @@ public class GraphicUI extends JFrame
 				}
 				else if (name.equals("Zoom in"))
 				{
-					viewport.zoom *= dzoom;
-					refresh();
+					viewport.scaleScreen(1/dzoom);
+					viewport.enforceFov();
+					refresh();					
 				}
 				else if (name.equals("Zoom out"))
 				{
+					viewport.scaleScreen(dzoom);
+					viewport.enforceFov();
+					refresh();
+				}
+				else if (name.equals("Scale up"))
+				{
+					viewport.zoom *= dzoom;
+					refresh();					
+				}
+				else if (name.equals("Scale down"))
+				{
 					viewport.zoom /= dzoom;
 					refresh();
+					
 				}
-				else if (name.equals("Move camera in"))
+				else if (name.equals("Increase FOV"))
 				{
-					viewport.scaleCamera(1/dzoom);
+					viewport.incrementFOV(dfov);
+					viewport.enforceFov();
 					refresh();
 				}
-				else if (name.equals("Move camera out"))
+				else if (name.equals("Decrease FOV"))
 				{
-					viewport.scaleCamera(dzoom);
-					refresh();
-				}
-				else if (name.equals("Move screen in"))
-				{
-					viewport.scaleScreen(1/dzoom);
-					refresh();
-				}
-				else if (name.equals("Move screen out"))
-				{
-					viewport.scaleScreen(dzoom);
+					viewport.incrementFOV(-dfov);
+					viewport.enforceFov();
 					refresh();
 				}
 				else if (name.equals("Default zoom"))
@@ -495,7 +662,7 @@ public class GraphicUI extends JFrame
 					message += "Program by: Jiayin Huang\n";
 					message += "Solly Sim.\n";
 					JOptionPane.showMessageDialog(GraphicUI.this, message, "About", JOptionPane.PLAIN_MESSAGE);			
-				}
+				}				
 			}			
 		}
 	}

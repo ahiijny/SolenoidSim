@@ -63,14 +63,17 @@ public class Sim
 		}
 		;	
 	public ArrayList<Entity> objects;
-	private ArrayList<Entity> shapes;
-	private ArrayList<Vector> vectors;
-	private ArrayList<Wire> wires;
+	protected ArrayList<Entity> shapes;
+	protected ArrayList<Vector> vectors;
+	protected ArrayList<Wire> wires;
 	
 	private Wire integratingWire;
 	
-	public Sim() 
+	public GraphicUI parent;
+	
+	public Sim(GraphicUI parent) 
 	{
+		this.parent = parent;
 		objects = new ArrayList<Entity>();
 		shapes = new ArrayList<Entity>();
 		vectors = new ArrayList<Vector>();
@@ -90,6 +93,7 @@ public class Sim
 	public void addWire(Wire w)
 	{
 		wires.add(w);
+		parent.updateEntitySel();
 	}		
 	
 	public boolean remove(Entity e)
@@ -104,7 +108,9 @@ public class Sim
 	
 	public boolean removeWire(Wire w)
 	{
-		return wires.remove(w);
+		boolean removed = wires.remove(w);
+		parent.updateEntitySel();
+		return removed;
 	}	
 	
 	public void simulate(double[][] points)
