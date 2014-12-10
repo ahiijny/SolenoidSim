@@ -56,5 +56,17 @@ public class StraightWire extends Line implements Wire
 		return t2;
 	}
 
+	@Override
+	public double[] get_position() 
+	{
+		return get_s(0);
+	}
+
+	@Override
+	public double[] get_direction() 
+	{
+		return direction;
+	}
+
 
 }

@@ -16,7 +16,7 @@ public class Solenoid extends Entity implements Wire
 	
 	public double[][] rotation;
 	public double[][] vertices;
-	public boolean cached = false;
+	public double cached_ds = 0;
 
 	public Solenoid(double current, double[] origin, double[] direction, double radius, double height, double turns) 
 	{
@@ -27,7 +27,7 @@ public class Solenoid extends Entity implements Wire
 		this.turns = turns;
 		this.color = Color.black;
 		this.current = current;
-		initRotationMatrix();
+		updateRotationMatrix();
 	}
 	
 	/** Find the rotation matrix that will rotate the direction vector
@@ -37,7 +37,7 @@ public class Solenoid extends Entity implements Wire
 	 * 
 	 * http://math.stackexchange.com/questions/180418/calculate-rotation-matrix-to-align-vector-a-to-vector-b-in-3d
 	 */
-	private void initRotationMatrix()
+	public void updateRotationMatrix()
 	{
 		// Find the cross product.
 		double[] k = {0,0,1};
@@ -67,8 +67,10 @@ public class Solenoid extends Entity implements Wire
 
 	public double[][] getPoints(double ds) 
 	{
-		if (!cached)
+		if (ds != cached_ds)
 		{
+			cached_ds = ds;
+			
 			ds /= (2* Math.PI * radius);
 			int n = getPointCount(ds);
 			double[][] points = new double[n][3];
@@ -128,6 +130,26 @@ public class Solenoid extends Entity implements Wire
 	public double get_t2() 
 	{
 		return 2 * Math.PI * turns;
+	}
+
+	@Override
+	public double[] get_position() 
+	{
+		return origin;
+	}
+
+	@Override
+	public double[] get_direction() 
+	{
+		return direction;
+	}
+	
+	/** Nulls cached plot points of shape, forcing
+	 * the program to regenerate these points from scratch. 
+	 */
+	public void resetCache()
+	{
+		cached_ds = 0;
 	}
 
 }

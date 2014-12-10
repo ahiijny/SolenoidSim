@@ -93,7 +93,7 @@ public class Sim
 	public void addWire(Wire w)
 	{
 		wires.add(w);
-		parent.updateEntitySel();
+		parent.entitySel.addItem(w.toString());
 	}		
 	
 	public boolean remove(Entity e)
@@ -109,14 +109,13 @@ public class Sim
 	public boolean removeWire(Wire w)
 	{
 		boolean removed = wires.remove(w);
-		parent.updateEntitySel();
+		parent.entitySel.removeItem(w.toString());
 		return removed;
 	}	
 	
 	public void simulate(double[][] points)
 	{
 		vectors.clear();
-		
 		if (points != null)
 		{
 			for (int i = 0; i < points.length; i++)
@@ -128,10 +127,8 @@ public class Sim
 				Vector vector = new Vector(point, direction, 1);
 				
 				vectors.add(vector);
-				System.out.println((i+1) + "/" + points.length);
+				System.out.println((i+1) + "/" + points.length);				
 			}
-			
-			
 			
 			for (Vector v : vectors)
 			{

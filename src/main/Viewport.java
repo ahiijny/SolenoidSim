@@ -106,7 +106,7 @@ public class Viewport extends JPanel
 	public void render(double[][] points, Color color)
 	{
 		bg.setColor(color);
-				
+		
 		for (int i = 0; i < points.length; i++)
 		{
 			double[] point = new double[3];

@@ -38,6 +38,7 @@ import javax.swing.Timer;
 import main.entities.Cube;
 import main.entities.Solenoid;
 import main.entities.StraightWire;
+import main.entities.Wire;
 
 /** Referenced http://tips4java.wordpress.com/2013/06/09/motion-using-the-keyboard/
  * for key bindings.
@@ -65,9 +66,11 @@ public class GraphicUI extends JFrame
 	public double fovIncrement = Math.toRadians(10);
 	
 	public JComboBox<String> entitySel;
-	String[] specLabels = {"rx", "ry", "rz", "dx", "dy", "dz", "Current", "Length", "Radius", "Turns"};
+	public String[] specLabels = {"rx", "ry", "rz", "dx", "dy", "dz", "Current", "Length", "Radius", "Turns"};
 	public JTextField[] wireSpecs;
-	public JButton specsBut;
+	public JButton specsBut, simBut;
+	public double[][] lattice;
+	public Wire wire;
 
 	public GraphicUI(String title, int width, int height)
 	{
@@ -90,7 +93,7 @@ public class GraphicUI extends JFrame
 		setSize(width, height);	
 		setVisible(true);
 		
-		viewport.requestFocusInWindow();
+		refresh();
 	}
 	
 	private JPanel createContent()
@@ -124,7 +127,7 @@ public class GraphicUI extends JFrame
 	private JPanel createLeftPanel()
 	{
 		JPanel leftpane = new JPanel(new BorderLayout());
-		JPanel inpane = new JPanel(new GridBagLayout());
+		JPanel wirepane = new JPanel(new GridBagLayout());
 		JButton button; 
 		JLabel label;
 		GridBagConstraints c = new GridBagConstraints();
@@ -136,8 +139,8 @@ public class GraphicUI extends JFrame
 		entitySel.setPreferredSize(new Dimension(200, 20));
 		entitySel.addActionListener(new MyListener());
 		
-		gridBagAdd(inpane, c, 0, 0, new JLabel("Select wire:"));
-		gridBagAdd(inpane, c, 0, 1, 2, GridBagConstraints.CENTER, entitySel);
+		gridBagAdd(wirepane, c, 0, 0, new JLabel("Select wire:"));
+		gridBagAdd(wirepane, c, 0, 1, 2, GridBagConstraints.CENTER, entitySel);
 		
 		// Input fields
 		
@@ -145,27 +148,26 @@ public class GraphicUI extends JFrame
 		
 		for (int i = 0; i < wireSpecs.length; i++)
 		{	
-			System.out.println(c.gridy);
 			if (i == 0)
 			{
-				separator(inpane, c);
+				separator(wirepane, c);
 				
 				label = new JLabel("Position:");
-				gridBagAdd(inpane, c, 0, ++c.gridy, label);
+				gridBagAdd(wirepane, c, 0, ++c.gridy, label);
 			}
 			else if (i == 3)
 			{
-				separator(inpane, c);
+				separator(wirepane, c);
 				
 				label = new JLabel("Direction:");
-				gridBagAdd(inpane, c, 0, ++c.gridy, label);
+				gridBagAdd(wirepane, c, 0, ++c.gridy, label);
 			}
 			else if (i == 6)
 			{
-				separator(inpane, c);
+				separator(wirepane, c);
 				
 				label = new JLabel("Other Parameters:");
-				gridBagAdd(inpane, c, 0, ++c.gridy, label);
+				gridBagAdd(wirepane, c, 0, ++c.gridy, label);
 			}
 			
 			wireSpecs[i] = new JTextField();
@@ -174,17 +176,20 @@ public class GraphicUI extends JFrame
 			label = new JLabel(specLabels[i]);
 			label.setFont(new Font("Courier New", Font.PLAIN, 12));
 			
-			gridBagAdd(inpane, c, 0, ++c.gridy, label);
-			gridBagAdd(inpane, c, 1, c.gridy, wireSpecs[i]);
+			gridBagAdd(wirepane, c, 0, ++c.gridy, label);
+			gridBagAdd(wirepane, c, 1, c.gridy, wireSpecs[i]);
 		}						
 		specsBut = new JButton("Update");
 		specsBut.addActionListener(new MyListener());
+		simBut = new JButton("Simulate");
+		simBut.addActionListener(new MyListener());
 		
-		gridBagAdd(inpane, c, 0, ++c.gridy, 2, GridBagConstraints.CENTER, specsBut);
+		gridBagAdd(wirepane, c, 0, ++c.gridy, 2, GridBagConstraints.CENTER, specsBut);		
+		gridBagAdd(wirepane, c, 0, ++c.gridy, 2, GridBagConstraints.CENTER, simBut);
 		
 		// Add panels
 		
-		leftpane.add(inpane, BorderLayout.CENTER);
+		leftpane.add(wirepane, BorderLayout.NORTH);
 		
 		return leftpane;
 	}
@@ -227,14 +232,7 @@ public class GraphicUI extends JFrame
 		panel.add(sep, c);
 		c.fill = GridBagConstraints.NONE;
 		c.gridwidth = 1;		
-	}
-	
-	public void updateEntitySel()
-	{
-		entitySel.removeAllItems();
-		for (int i = 0; i < sim.wires.size(); i++)
-			entitySel.addItem(sim.wires.get(i).toString());
-	}
+	}		
 	
 	private JMenuBar createMenuBar()
 	{
@@ -304,12 +302,12 @@ public class GraphicUI extends JFrame
 		view.add(button);
 		
 		button = new JMenuItem ("Scale up");
-		button.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_F9, 0));
+		button.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_PAGE_DOWN, 0));
 		button.addActionListener (new MenuListener());
 		view.add(button);
 		
 		button = new JMenuItem ("Scale down");
-		button.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_F8, 0));
+		button.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_PAGE_UP, 0));
 		button.addActionListener (new MenuListener());
 		view.add(button);
 		
@@ -368,7 +366,7 @@ public class GraphicUI extends JFrame
 		sim.addWire(new Solenoid(10, center, m, 10, 100, 10));
 		//sim.addWire(new StraightWire(10, center, m, 200));
 					
-		double[][] lattice = new double[125][3];
+		lattice = new double[125][3];
 		int counter = 0;
 		
 		for (int i = -100; i <= 100; i += 50)
@@ -508,7 +506,44 @@ public class GraphicUI extends JFrame
     {
     	viewport.refresh();
     	viewport.requestFocusInWindow();
+    	refreshInFields();
     }
+    
+    public void refreshInFields()
+    {
+    	if (wire != null)
+    	{
+    		double[] r = wire.get_position();
+    		double[] d = wire.get_direction();
+    		wireSpecs[0].setText(Double.toString(r[0]));
+    		wireSpecs[1].setText(Double.toString(r[1]));
+    		wireSpecs[2].setText(Double.toString(r[2]));
+    		wireSpecs[3].setText(Double.toString(d[0]));
+    		wireSpecs[4].setText(Double.toString(d[1]));
+    		wireSpecs[5].setText(Double.toString(d[2]));
+    		wireSpecs[6].setText(Double.toString(wire.current()));
+    		if (wire instanceof StraightWire)
+    		{
+    			wireSpecs[7].setText(Double.toString(wire.get_t2()));
+    			wireSpecs[8].setText("");
+    			wireSpecs[9].setText("");
+    		}
+    		else if (wire instanceof Solenoid)
+    		{
+    			Solenoid sol = (Solenoid)wire;
+    			wireSpecs[7].setText(Double.toString(sol.height));
+    			wireSpecs[8].setText(Double.toString(sol.radius));
+    			wireSpecs[9].setText(Double.toString(sol.turns));
+    		}
+    	}
+    }
+    
+    public void simulate()
+    {
+    	sim.simulate(lattice);
+    	refresh();
+    }
+    
 	
 	public void close ()
 	{
@@ -520,8 +555,9 @@ public class GraphicUI extends JFrame
 	{
 
 		@Override
-		public void mouseClicked(MouseEvent e) {
-			e.getComponent().requestFocus();
+		public void mouseClicked(MouseEvent e) 
+		{
+			viewport.requestFocus();
 			repaint();
 		}
 
@@ -551,18 +587,75 @@ public class GraphicUI extends JFrame
 		}		
 	}
 	
+	public void setEntitySel()
+	{
+		int index = entitySel.getSelectedIndex();
+		wire = sim.wires.get(index);
+		boolean isSolenoid = wire instanceof Solenoid;
+		for (int i = 6; i < 10; i++)
+			wireSpecs[i].setEditable(isSolenoid);
+	}
+	
+	public void setWireSpecs()
+	{
+		double rx = Double.parseDouble(wireSpecs[0].getText());
+		double ry = Double.parseDouble(wireSpecs[1].getText());
+		double rz = Double.parseDouble(wireSpecs[2].getText());
+		double dx = Double.parseDouble(wireSpecs[3].getText());
+		double dy = Double.parseDouble(wireSpecs[4].getText());
+		double dz = Double.parseDouble(wireSpecs[5].getText());
+		double i = Double.parseDouble(wireSpecs[6].getText());
+		double h = Double.parseDouble(wireSpecs[7].getText());
+		if (wire instanceof Solenoid)
+		{
+			double r = Double.parseDouble(wireSpecs[8].getText());
+			double n = Double.parseDouble(wireSpecs[9].getText());
+			
+			Solenoid sol = (Solenoid)wire;			
+			sol.radius = r;
+			sol.height = h;
+			sol.turns = n;
+			sol.current = i;
+			sol.origin = new double[] {rx, ry, rz};
+			sol.direction = Calc.unit(new double[] {dx, dy, dz});
+			sol.updateRotationMatrix();
+			sol.resetCache();
+		}
+		else if (wire instanceof StraightWire)
+		{
+			StraightWire str = (StraightWire)wire;
+			str.origin = new double[] {rx, ry, rz};
+			str.direction = Calc.unit(new double[] {dx, dy, dz});
+			str.current = i;
+			str.t2 = h;
+		}
+		sim.objects.removeAll(sim.vectors);
+		sim.vectors.clear();
+		refresh();
+	}	
+		
 	private class MyListener implements ActionListener
 	{
 		@Override
 		public void actionPerformed(ActionEvent e) 
 		{
 			Object parent = e.getSource();
-			if (parent instanceof JComboBox)
+			if (parent instanceof JButton)
 			{
-				
+				JButton button = (JButton)parent;
+				String text = button.getText();
+				if (text.equals("Update"))
+					setWireSpecs();
+				else if (text.equals("Simulate"))
+					simulate();
 			}
-		}
-		
+			else if (parent instanceof JComboBox)
+			{
+				JComboBox<String> combo = (JComboBox<String>)parent;
+				if (combo.equals(entitySel))
+					setEntitySel();
+			}
+		}		
 	}
 		
 	private class MyKeyListener implements KeyListener
