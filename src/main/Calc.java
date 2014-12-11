@@ -13,6 +13,7 @@ import java.text.DecimalFormat;
 public class Calc 
 {			
 	public static DecimalFormat large = new DecimalFormat("0.000E0");
+	public static DecimalFormat larger = new DecimalFormat("0.000000000000E0");
 	public static DecimalFormat small = new DecimalFormat("0.00");
 	public static DecimalFormat smaller = new DecimalFormat("0.0000");
 	public static DecimalFormat whole = new DecimalFormat("0");

@@ -18,6 +18,7 @@ import javax.swing.JPanel;
  */
 public class Viewport extends JPanel 
 {
+	public static final double defaultFOV = Math.toRadians(40);
 	public static final double defaultScreen = 20;
 	public static final double defaultScale = 36;
 	public static final double defaultPlotStep = 0.025;
@@ -35,7 +36,7 @@ public class Viewport extends JPanel
 	public Dimension size = new Dimension(984,640);
 	public Point mid = new Point(0,0);
 	
-	public double fov = Math.toRadians(40);
+	public double fov;
 	
 	public double screen[];
 	public double camera[];
@@ -72,6 +73,7 @@ public class Viewport extends JPanel
 		screen = Calc.scale(Calc.unit(screen), defaultScreen);
 		scale = defaultScale;
 		zoom = defaultScreen;
+		fov = defaultFOV;
 		enforceFOV();
 	}
 	

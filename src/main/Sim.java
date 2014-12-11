@@ -15,7 +15,7 @@ import main.entities.Wire;
  */
 public class Sim 
 {
-	public static final double u0 = 4 * Math.PI * 10E-7;
+	public static final double u0 = 4 * Math.PI * 1E-7;
 	public static final double defaultDt = 0.5;
 	
 	public static final int P_X = 0;
@@ -115,12 +115,36 @@ public class Sim
 		boolean removed = wires.remove(w);
 		parent.entitySel.removeItem(w.toString());
 		return removed;
-	}	
+	}			
+	
+	public void rescaleVectors(double newMaxB, double newMaxScale)
+	{
+		maxB = newMaxB;
+		maxScale = newMaxScale;
+		for (Vector v : vectors)
+		{				
+			v.setColorScale(maxB, minColor, maxColor);
+			v.setScale(maxScale/maxB);
+		}
+	}
 	
 	public void simulate(double[][] points)
 	{
-		vectors.clear();
-		maxB = 0;
+		simulate(points, true);
+	}
+	
+	public void simulate(double[][] points, boolean resetVectors)
+	{
+		if (resetVectors)
+		{
+			vectors.clear();
+			maxB = 0;
+		}
+		else
+		{
+			if (vectors.size() > 0)
+				vectors.remove(vectors.size() - 1);
+		}
 		if (points != null)
 		{
 			for (int i = 0; i < points.length; i++)
@@ -131,7 +155,7 @@ public class Sim
 				Vector vector = new Vector(point, direction, 1);
 				
 				vectors.add(vector);
-				System.out.println((i+1) + "/" + points.length);				
+				parent.setProcess((i+1) + "/" + points.length);
 			}
 			
 			for (Vector v : vectors)

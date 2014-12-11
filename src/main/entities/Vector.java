@@ -7,10 +7,8 @@ import main.Matrix;
 
 public class Vector extends Line 
 {
-	public static double arrowHeadLength1 = 0.4;
-	public static double arrowHeadLength2 = 0.4;
+	public static double arrowHeadLength = 0.4;
 	public static double arrowHeadThreshold = 0.5;
-	public static double arrowHeadAngle = Math.toRadians(45);
 	public Line arrowHead1 = new Line();
 	public Line arrowHead2 = new Line();
 	public double[] value;
@@ -49,13 +47,13 @@ public class Vector extends Line
 		m1 = Calc.unit(Matrix.multiply(R, m1));
 		m2 = Calc.unit(Matrix.multiply(R, m2));
 		
-		arrowHead1 = new Line(r, m1, 0, arrowHeadLength1, color);
-		arrowHead2 = new Line(r, m2, 0, arrowHeadLength2, color);
+		arrowHead1 = new Line(r, m1, 0, arrowHeadLength, color);
+		arrowHead2 = new Line(r, m2, 0, arrowHeadLength, color);
 	}		
 	
 	public void setColorScale(double maxValue, double lowerClip, double higherClip)
 	{
-		this.color = decimalToHue(t2/maxValue, lowerClip, higherClip);		
+		this.color = decimalToHue(Calc.mag(value)/maxValue, lowerClip, higherClip);		
 	}
 	
 	@Override
