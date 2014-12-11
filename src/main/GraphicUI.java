@@ -75,9 +75,9 @@ public class GraphicUI extends JFrame
 	public double[][] lattice;
 	public Wire wire;		
 	
-	public double[][] latticeValues = {	{-50, 50, 5},
-										{-50, 50, 5},
-										{-50, 50, 5} };	
+	public double[][] latticeValues = {	{-5, 5, 5},
+										{-5, 5, 5},
+										{-5, 5, 5} };	
 	private Timer timer;
 	private int keyboardDelay = 50;	
 	private HashSet<String> pressedKeys;
@@ -257,7 +257,7 @@ public class GraphicUI extends JFrame
 		for (int i = 0; i < 3; i++)
 			gridBagAdd(simpane, c, i+1, c.gridy, 1, GridBagConstraints.FIRST_LINE_START, latticeSpecs[2][i]);
 		
-		latticeBut = new JButton ("Set");
+		latticeBut = new JButton ("Update");
 		latticeBut.addActionListener(new MyListener());
 		gridBagAdd(simpane, c, 0, ++c.gridy, 4, GridBagConstraints.CENTER, latticeBut);			
 		
@@ -318,7 +318,7 @@ public class GraphicUI extends JFrame
 		label = new JLabel("Sim step:");		
 		simStep = new JTextField();
 		simStep.setColumns(5);		
-		simStepBut = new JButton("Set");
+		simStepBut = new JButton("Update");
 		simStepBut.addActionListener(new MyListener());		
 		row2.add(label);
 		row2.add(simStep);
@@ -481,11 +481,16 @@ public class GraphicUI extends JFrame
 		button = new JMenuItem ("Default zoom");
 		button.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_BACK_SLASH, 0));
 		button.addActionListener (new MenuListener());
-		view.add(button);	
+		view.add(button);
 		
-		button = new JMenuItem ("Plot step default");
+		button = new JMenuItem ("Default plot step");
 		button.addActionListener (new MenuListener());
 		view.add(button);
+		
+		button = new JMenuItem ("Reset camera");
+		button.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_F1, 0));
+		button.addActionListener (new MenuListener());
+		view.add(button);			
 		
 		button = new JMenuItem ("Refresh");
 		button.setMnemonic('r');
@@ -516,11 +521,11 @@ public class GraphicUI extends JFrame
 	private void initSim()
 	{
 		double[] origin = {0, 0, 0};
-		double[] center = {0, -50, 0};
+		double[] center = {0, -5, 0};
 		double[] m = {0, 1, 0};
-		Cube cube = new Cube(origin, 200, Color.black);
+		Cube cube = new Cube(origin, 20, Color.black);
 		sim.add(cube);
-		sim.addWire(new Solenoid(10, center, m, 10, 100, 10));
+		sim.addWire(new Solenoid(1, center, m, 1, 10, 10));
 		//sim.addWire(new StraightWire(10, center, m, 200));	
 	}
 	
@@ -707,7 +712,7 @@ public class GraphicUI extends JFrame
     	simStep.setText(Calc.small.format(sim.dt));
     	zoom.setText(Calc.small.format(viewport.zoom));
 		scale.setText(Calc.small.format(viewport.scale));
-		plotStep.setText(Calc.small.format(viewport.plotStep));		
+		plotStep.setText(Calc.smaller.format(viewport.plotStep));		
 	}
     
     public void simulate()
@@ -863,8 +868,8 @@ public class GraphicUI extends JFrame
 		double zmax = latticeValues[2][1];
 		
 		double dx = (xmax - xmin) / (xn - 1);
-		double dy = (xmax - xmin) / (xn - 1);
-		double dz = (xmax - xmin) / (xn - 1);
+		double dy = (xmax - xmin) / (yn - 1);
+		double dz = (xmax - xmin) / (zn - 1);
 		
 		// Store lattice points
 					
@@ -890,8 +895,7 @@ public class GraphicUI extends JFrame
 		try
 		{
 			double newStep = Double.parseDouble(simStep.getText());
-			sim.dt = newStep;
-			simulate();
+			sim.dt = newStep;			
 		}
 		catch (Exception e)
 		{
@@ -994,11 +998,15 @@ public class GraphicUI extends JFrame
 				{
 					readLatticeSpecs();
 					setLattice();
+					simulate();
 				}
 				else if (button.equals(simBut))
 					simulate();
 				else if (button.equals(simStepBut))
+				{
 					setSimStep();
+					simulate();
+				}
 				else if (button.equals(zoomBut))
 					setZoom();
 				else if (button.equals(scaleBut))
@@ -1112,9 +1120,15 @@ public class GraphicUI extends JFrame
 					viewport.defaultScale();
 					refresh();
 				}
-				else if (name.equals("Plot step default"))
+				else if (name.equals("Default plot step"))
 				{
 					viewport.plotStep = Viewport.defaultPlotStep;
+					refresh();
+				}
+				else if (name.equals("Reset camera"))
+				{
+					viewport.resetCamera();
+					refresh();
 				}
 				else if (name.equals("Refresh"))
 				{

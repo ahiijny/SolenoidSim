@@ -36,7 +36,7 @@ public class Sim
 	
 	public double dt = 0.5;	
 	public double maxB = 0;	
-	public double maxScale = 100;
+	public double maxScale = 5;
 	
 	public double minColor = 0;
 	public double maxColor = 0.85;

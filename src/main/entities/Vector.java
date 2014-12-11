@@ -7,9 +7,9 @@ import main.Matrix;
 
 public class Vector extends Line 
 {
-	public static double arrowHeadLength1 = 4;
-	public static double arrowHeadLength2 = 4;
-	public static double arrowHeadThreshold = 5;
+	public static double arrowHeadLength1 = 0.4;
+	public static double arrowHeadLength2 = 0.4;
+	public static double arrowHeadThreshold = 0.5;
 	public static double arrowHeadAngle = Math.toRadians(45);
 	public Line arrowHead1 = new Line();
 	public Line arrowHead2 = new Line();
