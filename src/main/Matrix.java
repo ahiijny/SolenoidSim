@@ -46,6 +46,44 @@ public class Matrix
 		return R;
 	}
 	
+	/** Finds the rotation matrix that rotates vector original onto vector target.
+	 * 
+	 * @param original
+	 * @param target
+	 * @return
+	 */
+	public static double[][] getRotationMatrix(double[] original, double[] target)
+	{
+		double[][] R = new double[3][3];
+		double[] a = Calc.unit(original);
+		double[] b = Calc.unit(target);
+		
+		// Find the rotation axis
+		double[] u = Calc.cross(a, b);
+				
+		// Find sin
+		double sin = Calc.mag(u);
+			
+		// Find cos
+		double cos = Calc.dot(a, b);
+		
+		if (sin != 0)
+		{				
+			// Find the rotation matrix
+			
+			double[][] VX = getSkewSymmetricCrossProductMatrix(u);
+			double[][] VXsq = multiply(VX, VX);
+			double[][] I = getIdentityMatrix(3);
+			
+			R = add(add(I, VX), scale(VXsq, (1 - cos)/(sin*sin)));
+		}
+		else
+		{
+			R = scale(getIdentityMatrix(3), Math.signum(cos));
+		}
+		return R;
+	}
+	
 	/** Returns the rotation matrix for a rotation about the x-axis.
 	 * 
 	 * @param theta		the rotation angle (radians)

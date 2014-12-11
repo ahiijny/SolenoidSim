@@ -14,6 +14,7 @@ public class Calc
 {			
 	public static DecimalFormat large = new DecimalFormat("0.000E0");
 	public static DecimalFormat small = new DecimalFormat("0.00");
+	public static DecimalFormat whole = new DecimalFormat("0");
 	public static DecimalFormat precise = new DecimalFormat("0.############");
 	
 	/** Returns the cross product of a and b. Must be in R3.

@@ -203,13 +203,19 @@ public class Viewport extends JPanel
 		Calc.println(screen);
 	}
 	
+	public void scaleScale(double scalar)
+	{
+		scale *= scalar;
+		enforceFOV();
+	}
+	
 	public void setZoom(double newZoom)
 	{
 		screen = Calc.scale(screen, newZoom / Calc.mag(screen));
 		zoom = Calc.mag(screen);
 		enforceFOV();
-	}
-	
+	}	
+		
 	public void incrementFOV(double increment)
 	{
 		double newFOV = fov + increment;

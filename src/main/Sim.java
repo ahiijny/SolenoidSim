@@ -38,6 +38,9 @@ public class Sim
 	public double maxB = 0;	
 	public double maxScale = 100;
 	
+	public double minColor = 0;
+	public double maxColor = 0.85;
+	
 	public static final double[][][] butcherTableau = 
 		{
 			{
@@ -81,16 +84,19 @@ public class Sim
 	public void add(Entity e)
 	{
 		shapes.add(e);
+		updateVertices();
 	}
 	
 	public void addVector(Vector v)
 	{
 		vectors.add(v);
+		updateVertices();
 	}
 	
 	public void addWire(Wire w)
 	{
 		wires.add(w);
+		updateVertices();
 		parent.entitySel.addItem(w.toString());
 	}		
 	
@@ -114,12 +120,12 @@ public class Sim
 	public void simulate(double[][] points)
 	{
 		vectors.clear();
+		maxB = 0;
 		if (points != null)
 		{
 			for (int i = 0; i < points.length; i++)
 			{
-				double[] point = points[i]; 
-				
+				double[] point = points[i];				
 				double[] direction = compute_field(point);
 				
 				Vector vector = new Vector(point, direction, 1);
@@ -129,9 +135,8 @@ public class Sim
 			}
 			
 			for (Vector v : vectors)
-			{
-				
-				v.setColorScale(maxB, 0, 0.85);
+			{				
+				v.setColorScale(maxB, minColor, maxColor);
 				v.setScale(maxScale/maxB);
 			}
 		}
@@ -149,7 +154,7 @@ public class Sim
 	
 	private double[] compute_field(double[] point)
 	{
-		double[] B = null;
+		double[] B = new double[] {0, 0, 0};
 		
 		for (Wire w : wires)
 		{
@@ -166,12 +171,14 @@ public class Sim
 			// because it is constant throughout the integration,
 			// so it doesn't need to be inside the integration.
 			
-			B = new double[] {vars[B_X], vars[B_Y], vars[B_Z]};
-			B = Calc.scale(B, u0 / (4 * Math.PI) * integratingWire.current());
-			double mag = Calc.mag(B);
-			if (!Double.isNaN(mag))
-				maxB = Math.max(Calc.mag(B), maxB);
+			double[] wireB = new double[] {vars[B_X], vars[B_Y], vars[B_Z]};
+			wireB = Calc.scale(wireB, u0 / (4 * Math.PI) * integratingWire.current());
+			B = Calc.add(B, wireB);
 		}
+		
+		double mag = Calc.mag(B);
+		if (!Double.isNaN(mag))
+			maxB = Math.max(Calc.mag(B), maxB);
 		
 		return B;
 	}		

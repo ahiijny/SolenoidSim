@@ -17,6 +17,11 @@ public class Solenoid extends Entity implements Wire
 	public double[][] rotation;
 	public double[][] vertices;
 	public double cached_ds = 0;
+	
+	public Solenoid()
+	{
+		this(0, new double[] {0, 0, 0}, new double[] {0, 1, 0}, 0.5, 10, 5);
+	}
 
 	public Solenoid(double current, double[] origin, double[] direction, double radius, double height, double turns) 
 	{
@@ -41,38 +46,16 @@ public class Solenoid extends Entity implements Wire
 	{
 		// Find the cross product.
 		double[] k = {0,0,1};
-		double[] u = Calc.cross(k, direction);
-		
-		// Find sin
-		double sin = Calc.mag(u);
-			
-		// Find cos
-		double cos = Calc.dot(k, direction);
-		
-		if (sin != 0)
-		{				
-			// Find the rotation matrix
-			
-			double[][] VX = Matrix.getSkewSymmetricCrossProductMatrix(u);
-			double[][] VXsq = Matrix.multiply(VX, VX);
-			double[][] I = Matrix.getIdentityMatrix(3);
-			
-			rotation = Matrix.add(Matrix.add(I, VX), Matrix.scale(VXsq, (1 - cos)/(sin*sin)));
-		}
-		else
-		{
-			rotation = Matrix.scale(Matrix.getIdentityMatrix(3), Math.signum(cos));
-		}
+		rotation = Matrix.getRotationMatrix(k, direction);
 	}
 
 	public double[][] getPoints(double ds) 
 	{
 		if (ds != cached_ds)
 		{
-			cached_ds = ds;
-			
-			ds /= (2* Math.PI * radius);
+			cached_ds = ds;						
 			int n = getPointCount(ds);
+			ds = get_t2()/n;
 			double[][] points = new double[n][3];
 			
 			for (int i = 0; i < n; i++)
@@ -84,7 +67,7 @@ public class Solenoid extends Entity implements Wire
 	
 	public int getPointCount(double ds)
 	{
-		return (int)(get_t2()/ds);
+		return (int)((2* Math.PI * radius * turns + height)/ds);
 	}
 
 	@Override

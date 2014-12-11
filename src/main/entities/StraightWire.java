@@ -7,6 +7,11 @@ import main.Calc;
 public class StraightWire extends Line implements Wire 
 {	
 	public double current;
+	
+	public StraightWire()
+	{
+		this(0, new double[] {0, 0, 0}, new double[] {0, 1, 0}, 50);
+	}
 
 	public StraightWire(double current, double[] origin, double[] direction, double length)
 	{

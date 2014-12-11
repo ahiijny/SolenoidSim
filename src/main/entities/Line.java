@@ -7,8 +7,8 @@ import main.Calc;
 
 public class Line extends Entity
 {
-	public double[] origin;
-	public double[] direction;
+	public double[] origin = {0, 0, 0};
+	public double[] direction = {0, 0, 0};
 	public double t1;
 	public double t2;
 	

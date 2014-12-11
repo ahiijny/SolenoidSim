@@ -68,12 +68,16 @@ public class GraphicUI extends JFrame
 			"Runge-Kutta, 2nd order (RK2)",								
 			"Runge-Kutta, 4th order (RK4)"};
 	public JTextField[] wireSpecs;
+	public JTextField[][] latticeSpecs;
 	public JTextField simStep, zoom, scale, plotStep;	
-	public JButton specsBut, simBut, simStepBut, zoomBut, scaleBut, plotStepBut;
+	public JButton specsBut, simBut, latticeBut, simStepBut, zoomBut, scaleBut, plotStepBut;
 	
 	public double[][] lattice;
 	public Wire wire;		
 	
+	public double[][] latticeValues = {	{-50, 50, 5},
+										{-50, 50, 5},
+										{-50, 50, 5} };	
 	private Timer timer;
 	private int keyboardDelay = 50;	
 	private HashSet<String> pressedKeys;
@@ -96,6 +100,7 @@ public class GraphicUI extends JFrame
 		setJMenuBar(createMenuBar());
 		setKeyBindings();
 		initSim();
+		setLattice();
 
 		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);	
 		setSize(width, height);	
@@ -111,7 +116,7 @@ public class GraphicUI extends JFrame
 		content.add(createMiddlePanel(),BorderLayout.CENTER);
 		content.add(createLeftPanel(),BorderLayout.WEST);
 		//content.add(createRightPanel(),BorderLayout.EAST);
-		//content.add(createTopPanel(),BorderLayout.NORTH);
+		content.add(createTopPanel(),BorderLayout.NORTH);
 		content.add(createBottomPanel(),BorderLayout.SOUTH);
 		
 		content.addMouseListener(new MyMouseListener());
@@ -133,8 +138,10 @@ public class GraphicUI extends JFrame
 	
 	private JPanel createLeftPanel()
 	{
+		JPanel left = new JPanel(new BorderLayout());
 		JPanel leftpane = new JPanel(new BorderLayout());
 		JPanel wirepane = new JPanel(new GridBagLayout());
+		JPanel simpane = new JPanel(new GridBagLayout());
 		JButton button; 
 		JLabel label;
 		GridBagConstraints c = new GridBagConstraints();
@@ -157,28 +164,28 @@ public class GraphicUI extends JFrame
 		{	
 			if (i == 0)
 			{
-				separator(wirepane, c);
+				separator(wirepane, c, 0, ++c.gridy, 2);
 				
 				label = new JLabel("Position:");
 				gridBagAdd(wirepane, c, 0, ++c.gridy, label);
 			}
 			else if (i == 3)
 			{
-				separator(wirepane, c);
+				separator(wirepane, c, 0, ++c.gridy, 2);
 				
 				label = new JLabel("Direction:");
 				gridBagAdd(wirepane, c, 0, ++c.gridy, label);
 			}
 			else if (i == 6)
 			{
-				separator(wirepane, c);
+				separator(wirepane, c, 0, ++c.gridy, 2);
 				
 				label = new JLabel("Other Parameters:");
 				gridBagAdd(wirepane, c, 0, ++c.gridy, label);
 			}
 			
 			wireSpecs[i] = new JTextField();
-			wireSpecs[i].setColumns(15);
+			wireSpecs[i].setColumns(11);
 			
 			label = new JLabel(specLabels[i]);
 			label.setFont(new Font("Courier New", Font.PLAIN, 12));
@@ -186,34 +193,117 @@ public class GraphicUI extends JFrame
 			gridBagAdd(wirepane, c, 0, ++c.gridy, label);
 			gridBagAdd(wirepane, c, 1, c.gridy, wireSpecs[i]);
 		}						
-		specsBut = new JButton("Update");
-		specsBut.addActionListener(new MyListener());
-		simBut = new JButton("Simulate");
-		simBut.addActionListener(new MyListener());
+		specsBut = new JButton("Set");
+		specsBut.addActionListener(new MyListener());		
 		
-		gridBagAdd(wirepane, c, 0, ++c.gridy, 2, GridBagConstraints.CENTER, specsBut);		
-		gridBagAdd(wirepane, c, 0, ++c.gridy, 2, GridBagConstraints.CENTER, simBut);
+		gridBagAdd(wirepane, c, 0, ++c.gridy, 2, GridBagConstraints.CENTER, specsBut);
+		
+		// Sim pane
+		
+		c.gridx = 0;
+		c.gridy = 0;
+		
+		separator(simpane, c, 0, c.gridy, 4);
+		
+		// Vector Lattice
+		
+		JLabel title = new JLabel ("Simulation");
+		title.setFont(new Font("Arial", Font.PLAIN, 14));
+		gridBagAdd(simpane, c, 0, ++c.gridy, 4, GridBagConstraints.FIRST_LINE_START, title);
+		
+		label = new JLabel("Vector Lattice:");
+		label.setFont(new Font("Courier New", Font.PLAIN, 12));
+		gridBagAdd(simpane, c, 0, ++c.gridy, 4, GridBagConstraints.FIRST_LINE_START, label);
+		
+		label = new JLabel("min");
+		label.setFont(new Font("Courier New", Font.PLAIN, 12));
+		gridBagAdd(simpane, c, 1, ++c.gridy, 1, GridBagConstraints.CENTER, label);
+		
+		label = new JLabel("max");
+		label.setFont(new Font("Courier New", Font.PLAIN, 12));
+		gridBagAdd(simpane, c, 2, c.gridy, 1, GridBagConstraints.CENTER, label);
+		
+		label = new JLabel("n");
+		label.setFont(new Font("Courier New", Font.PLAIN, 12));
+		gridBagAdd(simpane, c, 3, c.gridy, 1, GridBagConstraints.CENTER, label);
+		
+		// Lattice Input
+		
+		latticeSpecs = new JTextField[3][3];
+		for (int i = 0; i < 3; i++)
+			for (int j = 0; j < 2; j++)
+				latticeSpecs[i][j] = new JTextField(6);
+		for (int i = 0; i < 3; i++)
+			latticeSpecs[i][2] = new JTextField(4);
+		
+		label = new JLabel("x : ");
+		label.setFont(new Font("Courier New", Font.PLAIN, 12));
+		gridBagAdd(simpane, c, 0, ++c.gridy, 1, GridBagConstraints.FIRST_LINE_START, label);	
+		
+		for (int i = 0; i < 3; i++)
+			gridBagAdd(simpane, c, i+1, c.gridy, 1, GridBagConstraints.FIRST_LINE_START, latticeSpecs[0][i]);	
+		
+		label = new JLabel("y : ");
+		label.setFont(new Font("Courier New", Font.PLAIN, 12));
+		gridBagAdd(simpane, c, 0, ++c.gridy, 1, GridBagConstraints.FIRST_LINE_START, label);
+		
+		for (int i = 0; i < 3; i++)
+			gridBagAdd(simpane, c, i+1, c.gridy, 1, GridBagConstraints.FIRST_LINE_START, latticeSpecs[1][i]);	
+		
+		label = new JLabel("z : ");
+		label.setFont(new Font("Courier New", Font.PLAIN, 12));
+		gridBagAdd(simpane, c, 0, ++c.gridy, 1, GridBagConstraints.FIRST_LINE_START, label);
+		
+		for (int i = 0; i < 3; i++)
+			gridBagAdd(simpane, c, i+1, c.gridy, 1, GridBagConstraints.FIRST_LINE_START, latticeSpecs[2][i]);
+		
+		latticeBut = new JButton ("Set");
+		latticeBut.addActionListener(new MyListener());
+		gridBagAdd(simpane, c, 0, ++c.gridy, 4, GridBagConstraints.CENTER, latticeBut);			
 		
 		// Add panels
 		
 		leftpane.add(wirepane, BorderLayout.NORTH);
+		leftpane.add(simpane, BorderLayout.SOUTH);
+		left.add(leftpane, BorderLayout.NORTH);
 		
-		return leftpane;
+		return left;
+	}
+	
+	private void separator(JPanel panel, GridBagConstraints c, int x, int y, int width)
+	{
+		c.gridx = x;
+		c.gridy = y;
+		c.gridwidth = width;
+		JSeparator sep = new JSeparator();
+		//sep.setPreferredSize(new Dimension(100, 20));
+		c.fill = GridBagConstraints.HORIZONTAL;
+		panel.add(sep, c);
+		c.fill = GridBagConstraints.NONE;
 	}
 	
 	private JPanel createTopPanel()
 	{
-		return null;
+		JPanel top = new JPanel(new BorderLayout());
+		JPanel row = new JPanel();
+		
+		simBut = new JButton("SIMULATE");
+		simBut.addActionListener(new MyListener());		
+		row.add(simBut);
+		
+		top.add(row, BorderLayout.CENTER);
+		
+		return top;
 	}
 	
 	private JPanel createBottomPanel()
 	{
-JPanel bottom = new JPanel(new BorderLayout());					
+		JPanel bottom = new JPanel(new BorderLayout());					
 		
 		// Simulation
 		
 		JPanel row2 = new JPanel();
-		
+						
 		JLabel label = new JLabel("Integrator: ");		
 		
 		rkSel = new JComboBox<String>();
@@ -225,7 +315,7 @@ JPanel bottom = new JPanel(new BorderLayout());
 		row2.add(label);
 		row2.add(rkSel);
 						
-		label = new JLabel("Sim step (s):");		
+		label = new JLabel("Sim step:");		
 		simStep = new JTextField();
 		simStep.setColumns(5);		
 		simStepBut = new JButton("Set");
@@ -283,20 +373,7 @@ JPanel bottom = new JPanel(new BorderLayout());
 		panel.add(comp, c);
 		
 		System.out.println(x + "," + y);
-	}
-	
-	private void separator(JPanel panel, GridBagConstraints c)
-	{
-		c.gridy++;
-		c.gridwidth = 2;
-		c.gridx = 0;
-		JSeparator sep = new JSeparator();
-		//sep.setPreferredSize(new Dimension(100, 20));
-		c.fill = GridBagConstraints.HORIZONTAL;
-		panel.add(sep, c);
-		c.fill = GridBagConstraints.NONE;
-		c.gridwidth = 1;		
-	}		
+	}				
 	
 	private JMenuBar createMenuBar()
 	{
@@ -343,9 +420,25 @@ JPanel bottom = new JPanel(new BorderLayout());
 		
 		// "Simulation" Menu
 		simulation = new JMenu ("Simulation");
-		simulation.setMnemonic('s');	
+		simulation.setMnemonic('s');
+		
+		button = new JMenuItem ("Add straight wire");
+		button.addActionListener (new MenuListener());
+		simulation.add(button);
+		
+		button = new JMenuItem ("Add solenoid");
+		button.addActionListener (new MenuListener());
+		simulation.add(button);
+		
+		simulation.add(new JSeparator());
 					
 		button = new JMenuItem ("Sim step default");
+		button.addActionListener (new MenuListener());
+		simulation.add(button);
+		
+		simulation.add(new JSeparator());
+		
+		button = new JMenuItem ("Remove selected wire");
 		button.addActionListener (new MenuListener());
 		simulation.add(button);
 					
@@ -428,15 +521,7 @@ JPanel bottom = new JPanel(new BorderLayout());
 		Cube cube = new Cube(origin, 200, Color.black);
 		sim.add(cube);
 		sim.addWire(new Solenoid(10, center, m, 10, 100, 10));
-		//sim.addWire(new StraightWire(10, center, m, 200));
-					
-		lattice = new double[125][3];
-		int counter = 0;
-		
-		for (int i = -100; i <= 100; i += 50)
-			for (int j = -100; j <= 100; j += 50)
-				for (int k = -100; k <= 100; k += 50)				
-					lattice[counter++] = new double[] {i, j, k};		
+		//sim.addWire(new StraightWire(10, center, m, 200));	
 	}
 	
 	private void setKeyBindings()
@@ -574,31 +659,47 @@ JPanel bottom = new JPanel(new BorderLayout());
     
     public void refreshInFields()
     {
+    	// Wire specs
     	if (wire != null)
     	{
     		double[] r = wire.get_position();
     		double[] d = wire.get_direction();
-    		wireSpecs[0].setText(Double.toString(r[0]));
-    		wireSpecs[1].setText(Double.toString(r[1]));
-    		wireSpecs[2].setText(Double.toString(r[2]));
-    		wireSpecs[3].setText(Double.toString(d[0]));
-    		wireSpecs[4].setText(Double.toString(d[1]));
-    		wireSpecs[5].setText(Double.toString(d[2]));
-    		wireSpecs[6].setText(Double.toString(wire.current()));
+    		wireSpecs[0].setText(Calc.precise.format(r[0]));
+    		wireSpecs[1].setText(Calc.precise.format(r[1]));
+    		wireSpecs[2].setText(Calc.precise.format(r[2]));
+    		wireSpecs[3].setText(Calc.precise.format(d[0]));
+    		wireSpecs[4].setText(Calc.precise.format(d[1]));
+    		wireSpecs[5].setText(Calc.precise.format(d[2]));
+    		wireSpecs[6].setText(Calc.precise.format(wire.current()));
     		if (wire instanceof StraightWire)
     		{
-    			wireSpecs[7].setText(Double.toString(wire.get_t2()));
-    			wireSpecs[8].setText("");
-    			wireSpecs[9].setText("");
+    			wireSpecs[7].setText(Calc.precise.format(wire.get_t2()));
+    			wireSpecs[8].setText(" ");
+    			wireSpecs[9].setText(" ");
     		}
     		else if (wire instanceof Solenoid)
     		{
     			Solenoid sol = (Solenoid)wire;
-    			wireSpecs[7].setText(Double.toString(sol.height));
-    			wireSpecs[8].setText(Double.toString(sol.radius));
-    			wireSpecs[9].setText(Double.toString(sol.turns));
+    			wireSpecs[7].setText(Calc.precise.format(sol.height));
+    			wireSpecs[8].setText(Calc.precise.format(sol.radius));
+    			wireSpecs[9].setText(Calc.precise.format(sol.turns));
     		}
     	}
+    	else
+    	{
+    		for (int i = 0; i < wireSpecs.length; i++)
+    		{
+    			wireSpecs[i].setText(" ");
+    		}
+    	}
+    	
+    	// Lattice specs
+    	
+    	for (int i = 0; i < 3; i++)
+    		for (int j = 0; j < 2; j++)
+    			latticeSpecs[i][j].setText(Calc.small.format(latticeValues[i][j]));
+    	for (int i = 0; i < 3; i++)
+    		latticeSpecs[i][2].setText(Calc.whole.format(latticeValues[i][2]));
     }
     
     public void refreshOtherFields()
@@ -658,52 +759,126 @@ JPanel bottom = new JPanel(new BorderLayout());
 		}		
 	}
 	
-	public void setEntitySel()
+	public void setEntitySel(int index)
 	{
-		int index = entitySel.getSelectedIndex();
-		wire = sim.wires.get(index);
-		boolean isSolenoid = wire instanceof Solenoid;
-		for (int i = 6; i < 10; i++)
-			wireSpecs[i].setEditable(isSolenoid);
+		if (sim.wires.size() != 0)
+		{
+			wire = sim.wires.get(index);
+			boolean isSolenoid = wire instanceof Solenoid;
+			for (int i = 8; i < 10; i++)
+			{
+				wireSpecs[i].setEditable(isSolenoid);
+				if (!isSolenoid)
+					wireSpecs[i].setText(" ");
+			}
+			refreshInFields();
+		}
 	}
 	
 	public void setWireSpecs()
 	{
-		double rx = Double.parseDouble(wireSpecs[0].getText());
-		double ry = Double.parseDouble(wireSpecs[1].getText());
-		double rz = Double.parseDouble(wireSpecs[2].getText());
-		double dx = Double.parseDouble(wireSpecs[3].getText());
-		double dy = Double.parseDouble(wireSpecs[4].getText());
-		double dz = Double.parseDouble(wireSpecs[5].getText());
-		double i = Double.parseDouble(wireSpecs[6].getText());
-		double h = Double.parseDouble(wireSpecs[7].getText());
-		if (wire instanceof Solenoid)
+		try
 		{
-			double r = Double.parseDouble(wireSpecs[8].getText());
-			double n = Double.parseDouble(wireSpecs[9].getText());
-			
-			Solenoid sol = (Solenoid)wire;			
-			sol.radius = r;
-			sol.height = h;
-			sol.turns = n;
-			sol.current = i;
-			sol.origin = new double[] {rx, ry, rz};
-			sol.direction = Calc.unit(new double[] {dx, dy, dz});
-			sol.updateRotationMatrix();
-			sol.resetCache();
+			double rx = Double.parseDouble(wireSpecs[0].getText());
+			double ry = Double.parseDouble(wireSpecs[1].getText());
+			double rz = Double.parseDouble(wireSpecs[2].getText());
+			double dx = Double.parseDouble(wireSpecs[3].getText());
+			double dy = Double.parseDouble(wireSpecs[4].getText());
+			double dz = Double.parseDouble(wireSpecs[5].getText());
+			double i = Double.parseDouble(wireSpecs[6].getText());
+			double h = Double.parseDouble(wireSpecs[7].getText());
+			if (wire instanceof Solenoid)
+			{
+				double r = Double.parseDouble(wireSpecs[8].getText());
+				double n = Double.parseDouble(wireSpecs[9].getText());
+				
+				Solenoid sol = (Solenoid)wire;			
+				sol.radius = r;
+				sol.height = h;
+				sol.turns = n;
+				sol.current = i;
+				sol.origin = new double[] {rx, ry, rz};
+				sol.direction = Calc.unit(new double[] {dx, dy, dz});
+				sol.updateRotationMatrix();
+				sol.resetCache();
+			}
+			else if (wire instanceof StraightWire)
+			{
+				StraightWire str = (StraightWire)wire;
+				str.origin = new double[] {rx, ry, rz};
+				str.direction = Calc.unit(new double[] {dx, dy, dz});
+				str.current = i;
+				str.t2 = h;
+			}
+			sim.objects.removeAll(sim.vectors);
+			sim.vectors.clear();
+			refresh();
 		}
-		else if (wire instanceof StraightWire)
+		catch (Exception e)
 		{
-			StraightWire str = (StraightWire)wire;
-			str.origin = new double[] {rx, ry, rz};
-			str.direction = Calc.unit(new double[] {dx, dy, dz});
-			str.current = i;
-			str.t2 = h;
+			refreshInFields();
 		}
-		sim.objects.removeAll(sim.vectors);
-		sim.vectors.clear();
-		refresh();
 	}	
+	
+	public void readLatticeSpecs()
+	{
+		try
+		{
+			// Read in values
+			
+			latticeValues[0][2] = Integer.parseInt(latticeSpecs[0][2].getText());
+			latticeValues[1][2] = Integer.parseInt(latticeSpecs[1][2].getText());
+			latticeValues[2][2] = Integer.parseInt(latticeSpecs[2][2].getText());
+			
+			for (int i = 0; i < 3; i++)
+				if (latticeValues[i][2] < 1)
+					latticeValues[i][2] = 1;
+			
+			latticeValues[0][0] = Integer.parseInt(latticeSpecs[0][0].getText());
+			latticeValues[0][1] = Integer.parseInt(latticeSpecs[0][1].getText());
+			latticeValues[1][0] = Integer.parseInt(latticeSpecs[1][0].getText());
+			latticeValues[1][1] = Integer.parseInt(latticeSpecs[1][1].getText());
+			latticeValues[2][0] = Integer.parseInt(latticeSpecs[2][0].getText());
+			latticeValues[2][1] = Integer.parseInt(latticeSpecs[2][1].getText());				
+		}
+		catch (Exception e)
+		{
+			refreshInFields();
+		}
+	}
+	
+	public void setLattice()
+	{
+		// Take parameters from latticeSpecs array
+		
+		int xn = (int)(latticeValues[0][2]);
+		int yn = (int)(latticeValues[1][2]);
+		int zn = (int)(latticeValues[2][2]);
+		
+		double xmin = latticeValues[0][0];
+		double xmax = latticeValues[0][1];
+		double ymin = latticeValues[1][0];
+		double ymax = latticeValues[1][1];
+		double zmin = latticeValues[2][0];
+		double zmax = latticeValues[2][1];
+		
+		double dx = (xmax - xmin) / (xn - 1);
+		double dy = (xmax - xmin) / (xn - 1);
+		double dz = (xmax - xmin) / (xn - 1);
+		
+		// Store lattice points
+					
+		lattice = new double[xn*yn*zn][3];
+		int counter = 0;
+		
+		for (double i = xmin; i <= xmax; i += dx)
+			for (double j = ymin; j <= ymax; j += dy)
+				for (double k = zmin; k <= zmax; k += dz)		
+				{
+					lattice[counter++] = new double[] {i, j, k};
+					System.out.println(i + " " + j + " " + k);
+				}
+	}
 	
 	public void setPropagator(int rk)
 	{
@@ -765,6 +940,44 @@ JPanel bottom = new JPanel(new BorderLayout());
 			refreshOtherFields();
 		}	
 	}
+	
+	public void addSolenoid()
+	{
+		Solenoid sol = new Solenoid();
+		sim.vectors.clear();
+		sim.addWire(sol);			
+		
+		int newIndex = entitySel.getItemCount() - 1;
+		entitySel.setSelectedIndex(newIndex);
+		setEntitySel(newIndex);
+		refresh();
+	}
+	
+	public void addStraightWire()
+	{
+		StraightWire wir = new StraightWire();
+		sim.vectors.clear();
+		sim.addWire(wir);	
+		
+		int newIndex = entitySel.getItemCount() - 1;
+		entitySel.setSelectedIndex(newIndex);
+		setEntitySel(newIndex);
+		refresh();
+	}
+	
+	public void removeSelectedWire()
+	{
+		if (sim.wires.size() > 0)
+		{
+			int index = entitySel.getSelectedIndex();
+			sim.removeWire(sim.wires.get(index));
+			if (index >= sim.wires.size() && index > 0)
+				entitySel.setSelectedIndex(index - 1);
+			else
+				wire = null;
+			refresh();
+		}
+	}
 		
 	private class MyListener implements ActionListener
 	{
@@ -777,6 +990,11 @@ JPanel bottom = new JPanel(new BorderLayout());
 				JButton button = (JButton)parent;
 				if (button.equals(specsBut))
 					setWireSpecs();
+				else if (button.equals(latticeBut))
+				{
+					readLatticeSpecs();
+					setLattice();
+				}
 				else if (button.equals(simBut))
 					simulate();
 				else if (button.equals(simStepBut))
@@ -792,7 +1010,7 @@ JPanel bottom = new JPanel(new BorderLayout());
 			{
 				JComboBox<String> combo = (JComboBox<String>)parent;
 				if (combo.equals(entitySel))
-					setEntitySel();
+					setEntitySel(entitySel.getSelectedIndex());
 				else if (combo.equals(rkSel))
 					setPropagator(combo.getSelectedIndex());
 			}
@@ -838,9 +1056,21 @@ JPanel bottom = new JPanel(new BorderLayout());
 				{					
 					close();
 				}
+				else if (name.equals("Add solenoid"))
+				{
+					addSolenoid();
+				}
+				else if (name.equals("Add straight wire"))
+				{
+					addStraightWire();
+				}
 				else if (name.equals("Sim step default"))
 				{
 					sim.dt = Sim.defaultDt;
+				}
+				else if (name.equals("Remove selected wire"))
+				{
+					removeSelectedWire();
 				}
 				else if (name.equals("Zoom in"))
 				{
@@ -856,12 +1086,12 @@ JPanel bottom = new JPanel(new BorderLayout());
 				}
 				else if (name.equals("Scale up"))
 				{
-					viewport.scale *= dzoom;
+					viewport.scaleScale(dzoom);
 					refresh();					
 				}
 				else if (name.equals("Scale down"))
 				{
-					viewport.scale /= dzoom;
+					viewport.scaleScale(1/dzoom);
 					refresh();
 					
 				}

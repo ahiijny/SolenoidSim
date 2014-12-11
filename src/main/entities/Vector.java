@@ -3,9 +3,16 @@ package main.entities;
 import java.awt.Color;
 
 import main.Calc;
+import main.Matrix;
 
 public class Vector extends Line 
 {
+	public static double arrowHeadLength1 = 4;
+	public static double arrowHeadLength2 = 4;
+	public static double arrowHeadThreshold = 5;
+	public static double arrowHeadAngle = Math.toRadians(45);
+	public Line arrowHead1 = new Line();
+	public Line arrowHead2 = new Line();
 	public double[] value;
 	
 	public Vector(double[] position, double[] direction, double scale) 
@@ -20,17 +27,64 @@ public class Vector extends Line
 		this.direction = Calc.unit(direction);
 		this.t1 = 0;
 		this.color = color;
-		setScale(scale); 		
+		setScale(scale); 	
+		setArrowHeads();
 	}
 	
 	public void setScale(double scale)
 	{
 		t2 = Calc.mag(value) * scale;
+		double[] r = Calc.add(origin, Calc.scale(direction, t2));
+		arrowHead1.origin = r;
+		arrowHead2.origin = r;
 	}
 	
-	public void setColorScale(double colorScale, double lowerClip, double higherClip)
+	private void setArrowHeads()
 	{
-		this.color = decimalToHue(t2/colorScale, lowerClip, higherClip);		
+		double[] r = {0, t2, 0};
+		double[] m1 = {1, -4, 0};
+		double[] m2 = {-1, -4, 0};
+		double[][] R = Matrix.getRotationMatrix(r, direction);
+		r = Matrix.multiply(R, r);
+		m1 = Calc.unit(Matrix.multiply(R, m1));
+		m2 = Calc.unit(Matrix.multiply(R, m2));
+		
+		arrowHead1 = new Line(r, m1, 0, arrowHeadLength1, color);
+		arrowHead2 = new Line(r, m2, 0, arrowHeadLength2, color);
+	}		
+	
+	public void setColorScale(double maxValue, double lowerClip, double higherClip)
+	{
+		this.color = decimalToHue(t2/maxValue, lowerClip, higherClip);		
+	}
+	
+	@Override
+	public double[][] getPoints(double ds)
+	{
+		if (t2 > arrowHeadThreshold)
+		{
+			// Return points from vector body and 2 arrowheads
+			
+			int n1 = getPointCount(ds);
+			int n2 = arrowHead1.getPointCount(ds);
+			int n3 = arrowHead2.getPointCount(ds);
+			int n = n1 + n2 + n3;
+			double[][] points = new double[n][3];
+			int counter = 0;
+			
+			// Compute points
+			
+			for (int i = 0; i < n1; i++)
+				points[counter++] = Calc.add(origin, Calc.scale(direction, t1 + i * ds));
+			for (int i = 0; i < n2; i++)
+				points[counter++] = Calc.add(arrowHead1.origin, Calc.scale(arrowHead1.direction, arrowHead1.t1 + i * ds));
+			for (int i = 0; i < n3; i++)
+				points[counter++] = Calc.add(arrowHead2.origin, Calc.scale(arrowHead2.direction, arrowHead2.t1 + i * ds));
+			
+			return points;
+		}
+		else
+			return super.getPoints(ds);
 	}
 	
 	public static Color decimalToHue(double decimal, double lowerClip, double higherClip)
