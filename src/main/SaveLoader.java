@@ -8,6 +8,7 @@ import java.io.OutputStreamWriter;
 
 import javax.swing.JOptionPane;
 
+import main.entities.Entity;
 import main.entities.Solenoid;
 import main.entities.StraightWire;
 import main.entities.Vector;
@@ -40,7 +41,8 @@ public class SaveLoader
 		str += "showArrowheadLowerLimit = " + Vector.arrowHeadThreshold + endl;
 		str += "arrowHeadLength = " + Vector.arrowHeadLength + endl;
 		str += "minColor = " + sim.minColor + endl;
-		str += "maxColor = " + sim.maxColor + endl;			
+		str += "maxColor = " + sim.maxColor + endl;
+		str += "progressInterval = " + sim.progressInterval + endl; 
 		str += endl;
 		
 		str += ";Vector Lattice " + endl;
@@ -63,7 +65,13 @@ public class SaveLoader
 		str += "zoom = " + gui.viewport.zoom + endl;
 		str += "upscale = " + gui.viewport.scale + endl;
 		str += "fov = " + Math.toDegrees(gui.viewport.fov) + endl;
-		str += "screen =";
+		str += "screen_x-axis =";
+		for (int i = 0; i < 3; i++)
+			str += " " + gui.viewport.xaxis[i];
+		str += endl + "screen_y-axis =";
+		for (int i = 0; i < 3; i++)
+			str += " " + gui.viewport.yaxis[i];
+		str += endl + "screen =";
 		for (int i = 0; i < 3; i++)
 			str += " " + gui.viewport.screen[i];
 		str += endl + "camera =";
@@ -79,7 +87,7 @@ public class SaveLoader
 	public String getString(Wire w)
 	{
 		String str = "";
-		str += "=== " + sim.wires.indexOf(w) + " " + w.toString() + " ===" + endl;
+		str += "=== " + sim.wires.indexOf(w) + " " + w.getClass().getSimpleName() + " ===" + endl;
 		double[] r = w.get_position();
 		double[] d = w.get_direction();
 		double length = w.get_t2() - w.get_t1();
@@ -95,6 +103,7 @@ public class SaveLoader
 		}
 		else
 			str += "length = " + length + endl;
+		str += "scale_plot_step = " + ((Entity)w).plotStepScalar + endl;
 		return str;
 	}
 
@@ -232,6 +241,8 @@ public class SaveLoader
 								double turns = atof(params[2]);
 								((Solenoid)wire).turns = turns;
 							}
+							else if (params[0].equals("scale_plot_step"))
+								((Entity)wire).plotStepScalar = atof(params[2]);
 							line++;
 							sameWire = line < parameters.length;
 							if (sameWire)
@@ -299,30 +310,42 @@ public class SaveLoader
 						gui.latticeBounds[1][2] = atof(params[2]);
 					else if (params[0].equals("zNum"))
 						gui.latticeBounds[2][2] = atof(params[2]);
+					else if (params[0].equals("progressInterval"))
+						sim.progressInterval = atoi(params[2]);
 					else if (params[0].equals("zoom"))
-						gui.viewport.setZoom(atof(params[2]));
+					{
+						double zoom = atof(params[2]);
+						Viewport.defaultZoom = zoom;
+						gui.viewport.setZoom(zoom);
+					}
 					else if (params[0].equals("upscale"))
 					{
-						gui.viewport.scale = atof(params[2]);
+						double scale = atof(params[2]);
+						Viewport.defaultScale = scale;
+						gui.viewport.scale = scale;
 						gui.viewport.enforceFOV();
 					}
 					else if (params[0].equals("fov"))
 					{
-						gui.viewport.fov = Math.toRadians(atof(params[2]));
+						double fov = Math.toRadians(atof(params[2]));
+						Viewport.defaultFOV = fov;
+						gui.viewport.fov = fov;;
 						gui.viewport.enforceFOV();
 					}
+					else if (params[0].equals("screen_x-axis"))
+						gui.viewport.xaxis = new double[] {atof(params[2]), atof(params[3]), atof(params[4])};
+					else if (params[0].equals("screen_y-axis"))
+						gui.viewport.yaxis = new double[] {atof(params[2]), atof(params[3]), atof(params[4])};
 					else if (params[0].equals("screen"))
-					{
-						double[] s = {atof(params[2]), atof(params[3]), atof(params[4])};
-						gui.viewport.screen = s;
-					}
+						gui.viewport.screen = new double[] {atof(params[2]), atof(params[3]), atof(params[4])};
 					else if (params[0].equals("camera"))
-					{
-						double[] c = {atof(params[2]), atof(params[3]), atof(params[4])};
-						gui.viewport.camera = c;
-					}	
+						gui.viewport.camera = new double[] {atof(params[2]), atof(params[3]), atof(params[4])};
 					else if (params[0].equals("plotStep"))
-						gui.viewport.plotStep = atof(params[2]);
+					{
+						double plotStep = atof(params[2]);
+						Viewport.defaultPlotStep = plotStep;
+						gui.viewport.plotStep = plotStep;
+					}
 					else if (params[0].equals("cubeLength"))
 						gui.cubeSpecs.setText(params[2]);
 				}
@@ -345,7 +368,7 @@ public class SaveLoader
 	 * @param path  the file to be read
 	 * @return the file's contents in String format
 	 */
-	private String readSave()
+	private String readSave() throws Exception
 	{
 		// Declaration of Variables
 		String save = "";
@@ -372,6 +395,7 @@ public class SaveLoader
 			String message = "Error. Could not read file:" + path;
 			int type = JOptionPane.INFORMATION_MESSAGE;
 			JOptionPane.showMessageDialog(null, message, "Load", type);
+			throw e;
 		}
 		return save;
 	}

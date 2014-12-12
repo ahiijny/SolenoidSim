@@ -4,7 +4,6 @@ import java.util.ArrayList;
 import java.util.Collection;
 
 import main.entities.Entity;
-import main.entities.StraightWire;
 import main.entities.Vector;
 import main.entities.Wire;
 
@@ -74,6 +73,7 @@ public class Sim
 	private Wire integratingWire;
 	
 	public GraphicUI parent;
+	public int progressInterval = 25;
 	
 	public String process = "";
 	
@@ -118,6 +118,7 @@ public class Sim
 	public boolean removeWire(Wire w)
 	{
 		boolean removed = wires.remove(w);
+		objects.remove(w);
 		parent.entitySel.removeItem(w.toString());
 		return removed;
 	}			
@@ -135,10 +136,10 @@ public class Sim
 	
 	public void simulate(double[][] points)
 	{
-		simulate(points, true);
+		simulate(points, true, false);
 	}
 	
-	public void simulate(double[][] points, boolean resetVectors)
+	public void simulate(double[][] points, boolean resetVectors, boolean removePreviousProbe)
 	{
 		if (resetVectors)
 		{
@@ -147,8 +148,9 @@ public class Sim
 		}
 		else
 		{
-			if (vectors.size() > 0)
-				vectors.remove(vectors.size() - 1);
+			if (removePreviousProbe)
+				if (vectors.size() > 0)
+					vectors.remove(vectors.size() - 1);
 		}
 		if (points != null)
 		{
@@ -161,7 +163,7 @@ public class Sim
 				
 				vectors.add(vector);
 				process = (i+1) + "/" + points.length;
-				if ((i+1) % 100 == 0 || i == points.length - 1)
+				if ((i+1) % progressInterval == 0 || i == points.length - 1)
 					parent.updateProcess();
 			}
 			

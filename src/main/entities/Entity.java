@@ -4,6 +4,7 @@ import java.awt.Color;
 public abstract class Entity 
 {
 	public Color color;
+	public double plotStepScalar;
 	
 	public abstract double[][] getPoints(double ds);
 	

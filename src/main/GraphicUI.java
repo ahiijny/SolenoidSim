@@ -21,6 +21,7 @@ import javax.swing.AbstractAction;
 import javax.swing.ActionMap;
 import javax.swing.InputMap;
 import javax.swing.JButton;
+import javax.swing.JCheckBox;
 import javax.swing.JComboBox;
 import javax.swing.JComponent;
 import javax.swing.JFrame;
@@ -73,8 +74,9 @@ public class GraphicUI extends JFrame
 	public JTextField[][] latticeSpecs;
 	public JTextField simStep, zoom, scale, fov, plotStep, maxB, maxScale, 
 					arrowHeadThreshold, arrowHeadLength, minColor, maxColor, 
-					magB, cubeSpecs;	
-	public JButton specsBut, simBut, latticeBut, simStepBut, zoomBut, scaleBut, fovBut, plotStepBut, vectorBut, probeBut, cubeBut;
+					magB, cubeSpecs, plotStepScalar, progressInterval;	
+	public JCheckBox probePersist;
+	public JButton specsBut, simBut, latticeBut, simStepBut, zoomBut, scaleBut, fovBut, plotStepBut, vectorBut, probeBut, otherBut;
 	
 	public Cube cube;
 	
@@ -124,9 +126,9 @@ public class GraphicUI extends JFrame
 		load();
 
 		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);	
-		setSize(width, height);			
-		setVisible(true);
-		simulate();
+		setSize(width, height);	
+		refresh();
+		setVisible(true);			
 	}
 	
 	private JPanel createContent()
@@ -157,7 +159,7 @@ public class GraphicUI extends JFrame
 		JPanel rightpane = new JPanel(new BorderLayout());
 		JPanel vectorpane = new JPanel(new GridBagLayout());
 		JPanel probepane = new JPanel(new GridBagLayout());
-		JPanel statpane = new JPanel(new GridBagLayout());
+		JPanel otherpane = new JPanel(new GridBagLayout());
 		JLabel label;
 		GridBagConstraints c = new GridBagConstraints();
 		c.insets = new Insets(2,4,2,4);
@@ -168,37 +170,37 @@ public class GraphicUI extends JFrame
 		title.setFont(new Font("Arial", Font.PLAIN, 14));
 		gridBagAdd(vectorpane, c, 0, 0, 2, GridBagConstraints.FIRST_LINE_START, title);
 		
-		label = new JLabel("Max B:");
+		label = new JLabel("Max B");
 		label.setFont(new Font("Courier New", Font.PLAIN, 12));
 		maxB = new JTextField(15);
 		gridBagAdd(vectorpane, c, 0, ++c.gridy, 1, GridBagConstraints.FIRST_LINE_START, label);
 		gridBagAdd(vectorpane, c, 1, c.gridy, 1, GridBagConstraints.FIRST_LINE_START, maxB);
 		
-		label = new JLabel("Max length:");
+		label = new JLabel("Max length");
 		label.setFont(new Font("Courier New", Font.PLAIN, 12));
 		maxScale = new JTextField(15);
 		gridBagAdd(vectorpane, c, 0, ++c.gridy, 1, GridBagConstraints.FIRST_LINE_START, label);
 		gridBagAdd(vectorpane, c, 1, c.gridy, 1, GridBagConstraints.FIRST_LINE_START, maxScale);
 		
-		label = new JLabel("Arrowhead limit:");
+		label = new JLabel("Arrowhead limit");
 		label.setFont(new Font("Courier New", Font.PLAIN, 12));
 		arrowHeadThreshold = new JTextField(15);
 		gridBagAdd(vectorpane, c, 0, ++c.gridy, 1, GridBagConstraints.FIRST_LINE_START, label);
 		gridBagAdd(vectorpane, c, 1, c.gridy, 1, GridBagConstraints.FIRST_LINE_START, arrowHeadThreshold);
 		
-		label = new JLabel("Arrowhead size:");
+		label = new JLabel("Arrowhead size");
 		label.setFont(new Font("Courier New", Font.PLAIN, 12));
 		arrowHeadLength = new JTextField(15);
 		gridBagAdd(vectorpane, c, 0, ++c.gridy, 1, GridBagConstraints.FIRST_LINE_START, label);
 		gridBagAdd(vectorpane, c, 1, c.gridy, 1, GridBagConstraints.FIRST_LINE_START, arrowHeadLength);
 		
-		label = new JLabel("Min color:");
+		label = new JLabel("Min color");
 		label.setFont(new Font("Courier New", Font.PLAIN, 12));
 		minColor = new JTextField(15);
 		gridBagAdd(vectorpane, c, 0, ++c.gridy, 1, GridBagConstraints.FIRST_LINE_START, label);
 		gridBagAdd(vectorpane, c, 1, c.gridy, 1, GridBagConstraints.FIRST_LINE_START, minColor);
 		
-		label = new JLabel("Max color:");
+		label = new JLabel("Max color");
 		label.setFont(new Font("Courier New", Font.PLAIN, 12));
 		maxColor = new JTextField(15);
 		gridBagAdd(vectorpane, c, 0, ++c.gridy, 1, GridBagConstraints.FIRST_LINE_START, label);
@@ -231,11 +233,11 @@ public class GraphicUI extends JFrame
 		label.setFont(new Font("Courier New", Font.PLAIN, 12));
 		gridBagAdd(probepane, c, 3, c.gridy, 1, GridBagConstraints.CENTER, label);
 		
-		label = new JLabel ("Pos:");
+		label = new JLabel ("Pos");
 		label.setFont(new Font("Courier New", Font.PLAIN, 12));
 		gridBagAdd(probepane, c, 0, ++c.gridy, 1, GridBagConstraints.FIRST_LINE_START, label);
 		
-		label = new JLabel ("B:");
+		label = new JLabel ("B");
 		label.setFont(new Font("Courier New", Font.PLAIN, 12));
 		gridBagAdd(probepane, c, 0, ++c.gridy, 1, GridBagConstraints.FIRST_LINE_START, label);
 		
@@ -255,7 +257,7 @@ public class GraphicUI extends JFrame
 		for (int i = 0; i < 3; i++)
 			probeSpecs[1][i].setEditable(false);
 		
-		label = new JLabel("B mag:");
+		label = new JLabel("B mag");
 		label.setFont(new Font("Courier New", Font.PLAIN, 12));
 		magB = new JTextField(6);
 		magB.setEditable(false);
@@ -270,7 +272,7 @@ public class GraphicUI extends JFrame
 		
 		separator(probepane, c, 0, ++c.gridy, 4);
 		
-		// Statpane
+		// Other Pane
 				
 		c.gridx = 0;
 		c.gridy = 0;
@@ -278,29 +280,31 @@ public class GraphicUI extends JFrame
 		
 		title = new JLabel ("Other settings");
 		title.setFont(new Font("Arial", Font.PLAIN, 14));
-		gridBagAdd(statpane, c, 0, 0, 2, GridBagConstraints.FIRST_LINE_START, title);
+		gridBagAdd(otherpane, c, 0, 0, 2, GridBagConstraints.FIRST_LINE_START, title);
 		
-		label = new JLabel("Cube length:");
+		label = new JLabel("Cube length");
 		label.setFont(new Font("Courier New", Font.PLAIN, 12));
-		gridBagAdd(statpane, c, 0, ++c.gridy, 1, GridBagConstraints.FIRST_LINE_START, label);
+		gridBagAdd(otherpane, c, 0, ++c.gridy, 1, GridBagConstraints.FIRST_LINE_START, label);		
+		cubeSpecs = new JTextField(18);
+		gridBagAdd(otherpane, c, 1, c.gridy, 1, GridBagConstraints.FIRST_LINE_START, cubeSpecs);
 		
-		cubeSpecs = new JTextField(20);
-		gridBagAdd(statpane, c, 1, c.gridy, 1, GridBagConstraints.FIRST_LINE_START, cubeSpecs);
+		label = new JLabel("Show progress");
+		label.setFont(new Font("Courier New", Font.PLAIN, 12));
+		gridBagAdd(otherpane, c, 0, ++c.gridy, 1, GridBagConstraints.FIRST_LINE_START, label);
+		progressInterval = new JTextField(18);
+		gridBagAdd(otherpane, c, 1, c.gridy, 1, GridBagConstraints.FIRST_LINE_START, progressInterval);
 		
 		c.fill = GridBagConstraints.NONE;
 		
-		cubeBut = new JButton("Set");
-		cubeBut.addActionListener(new MyListener());
-		gridBagAdd(statpane, c, 0, ++c.gridy, 2, GridBagConstraints.CENTER, cubeBut);
-		
-		
-						
-		
+		otherBut = new JButton("Set");
+		otherBut.addActionListener(new MyListener());
+		gridBagAdd(otherpane, c, 0, ++c.gridy, 2, GridBagConstraints.CENTER, otherBut);
+				
 		// Add panels
 		
 		rightpane.add(vectorpane, BorderLayout.NORTH);
 		rightpane.add(probepane, BorderLayout.CENTER);
-		rightpane.add(statpane, BorderLayout.SOUTH);
+		rightpane.add(otherpane, BorderLayout.SOUTH);
 		right.add(rightpane, BorderLayout.NORTH);
 		return right;
 	}
@@ -321,7 +325,7 @@ public class GraphicUI extends JFrame
 		entitySel.setPreferredSize(new Dimension(200, 20));
 		entitySel.addActionListener(new MyListener());
 		
-		gridBagAdd(wirepane, c, 0, 0, new JLabel("Select wire:"));
+		gridBagAdd(wirepane, c, 0, 0, new JLabel("Select wire"));
 		gridBagAdd(wirepane, c, 0, 1, 2, GridBagConstraints.CENTER, entitySel);
 		
 		// Input fields
@@ -334,21 +338,21 @@ public class GraphicUI extends JFrame
 			{
 				separator(wirepane, c, 0, ++c.gridy, 2);
 				
-				label = new JLabel("Position:");
+				label = new JLabel("Position");
 				gridBagAdd(wirepane, c, 0, ++c.gridy, label);
 			}
 			else if (i == 3)
 			{
 				separator(wirepane, c, 0, ++c.gridy, 2);
 				
-				label = new JLabel("Direction:");
+				label = new JLabel("Direction");
 				gridBagAdd(wirepane, c, 0, ++c.gridy, label);
 			}
 			else if (i == 6)
 			{
 				separator(wirepane, c, 0, ++c.gridy, 2);
 				
-				label = new JLabel("Other Parameters:");
+				label = new JLabel("Other Parameters");
 				gridBagAdd(wirepane, c, 0, ++c.gridy, label);
 			}
 			
@@ -360,7 +364,17 @@ public class GraphicUI extends JFrame
 			
 			gridBagAdd(wirepane, c, 0, ++c.gridy, label);
 			gridBagAdd(wirepane, c, 1, c.gridy, wireSpecs[i]);
-		}						
+		}			
+		
+		separator(wirepane, c, 0, ++c.gridy, 2);
+		
+		label = new JLabel("Scale plot step");
+		label.setFont(new Font("Courier New", Font.PLAIN, 12));
+		plotStepScalar = new JTextField(11);
+		
+		gridBagAdd(wirepane, c, 0, ++c.gridy, label);
+		gridBagAdd(wirepane, c, 1, c.gridy, plotStepScalar);
+		
 		specsBut = new JButton("Set");
 		specsBut.addActionListener(new MyListener());		
 		
@@ -379,7 +393,7 @@ public class GraphicUI extends JFrame
 		title.setFont(new Font("Arial", Font.PLAIN, 14));
 		gridBagAdd(simpane, c, 0, ++c.gridy, 4, GridBagConstraints.FIRST_LINE_START, title);
 		
-		label = new JLabel("Vector Lattice:");
+		label = new JLabel("Vector Lattice");
 		label.setFont(new Font("Courier New", Font.PLAIN, 12));
 		gridBagAdd(simpane, c, 0, ++c.gridy, 4, GridBagConstraints.FIRST_LINE_START, label);
 		
@@ -529,6 +543,11 @@ public class GraphicUI extends JFrame
 		row2.add(label);
 		row2.add(plotStep);
 		row2.add(plotStepBut);
+		
+		label = new JLabel("Probe persist: ");
+		probePersist = new JCheckBox();
+		row2.add(label);
+		row2.add(probePersist);
 		 
 		bottom.add(row2, BorderLayout.WEST);
 		
@@ -548,8 +567,6 @@ public class GraphicUI extends JFrame
 		c.gridwidth = width;
 		c.anchor = align;		
 		panel.add(comp, c);
-		
-		System.out.println(x + "," + y);
 	}				
 	
 	private JMenuBar createMenuBar()
@@ -582,14 +599,16 @@ public class GraphicUI extends JFrame
 				KeyEvent.VK_S, menuKeyMask));
 		button.addActionListener (new MenuListener ());
 		file.add(button);
-		/*
+		
 		button = new JMenuItem ("Export to CSV");
 		button.setMnemonic('x');
 		button.setAccelerator(KeyStroke.getKeyStroke (
 				KeyEvent.VK_X, menuKeyMask));
 		button.addActionListener (new MenuListener ());
 		file.add(button);
-*/
+		
+		file.add(new JSeparator());
+
 		button = new JMenuItem ("Exit"); // exit button
 		button.setMnemonic('x');
 		button.addActionListener (new MenuListener ());
@@ -676,6 +695,11 @@ public class GraphicUI extends JFrame
 		// "Help" Menu
 		help = new JMenu ("Help");
 		help.setMnemonic('h');	
+		
+		button = new JMenuItem ("Controls"); // about button
+		button.setMnemonic('c');
+		button.addActionListener (new MenuListener ());
+		help.add(button);
 
 		button = new JMenuItem ("About"); // about button
 		button.setMnemonic('a');
@@ -853,6 +877,7 @@ public class GraphicUI extends JFrame
     			wireSpecs[7].setText(Calc.precise.format(wire.get_t2()));
     			wireSpecs[8].setText(" ");
     			wireSpecs[9].setText(" ");
+    			plotStepScalar.setText(Calc.smaller.format(((StraightWire)wire).plotStepScalar));
     		}
     		else if (wire instanceof Solenoid)
     		{
@@ -860,6 +885,7 @@ public class GraphicUI extends JFrame
     			wireSpecs[7].setText(Calc.precise.format(sol.height));
     			wireSpecs[8].setText(Calc.precise.format(sol.radius));
     			wireSpecs[9].setText(Calc.precise.format(sol.turns));
+    			plotStepScalar.setText(Calc.smaller.format(((Solenoid)wire).plotStepScalar));
     		}
     	}
     	else
@@ -874,7 +900,7 @@ public class GraphicUI extends JFrame
     	
     	for (int i = 0; i < 3; i++)
     		for (int j = 0; j < 2; j++)
-    			latticeSpecs[i][j].setText(Calc.small.format(latticeBounds[i][j]));
+    			latticeSpecs[i][j].setText(Calc.smaller.format(latticeBounds[i][j]));
     	for (int i = 0; i < 3; i++)
     		latticeSpecs[i][2].setText(Calc.whole.format(latticeBounds[i][2]));
     }
@@ -891,9 +917,9 @@ public class GraphicUI extends JFrame
     public void refreshRightFields()
     {
     	maxB.setText(Calc.larger.format(sim.maxB));
-    	maxScale.setText(Calc.small.format(sim.maxScale));
-    	arrowHeadThreshold.setText(Calc.small.format(Vector.arrowHeadThreshold));
-    	arrowHeadLength.setText(Calc.small.format(Vector.arrowHeadLength));
+    	maxScale.setText(Calc.smaller.format(sim.maxScale));
+    	arrowHeadThreshold.setText(Calc.smaller.format(Vector.arrowHeadThreshold));
+    	arrowHeadLength.setText(Calc.smaller.format(Vector.arrowHeadLength));
     	minColor.setText(Calc.smaller.format(sim.minColor));    	
     	maxColor.setText(Calc.smaller.format(sim.maxColor));
     	
@@ -918,6 +944,7 @@ public class GraphicUI extends JFrame
     	} 	
     	
     	cubeSpecs.setText(Calc.smaller.format(cube.width));
+    	progressInterval.setText(Calc.whole.format(sim.progressInterval));
     }
     
     public void simulate()
@@ -1030,26 +1057,29 @@ public class GraphicUI extends JFrame
 			double dz = Double.parseDouble(wireSpecs[5].getText());
 			double i = Double.parseDouble(wireSpecs[6].getText());
 			double h = Double.parseDouble(wireSpecs[7].getText());
+			double scale = Double.parseDouble(plotStepScalar.getText());
 			if (wire instanceof Solenoid)
 			{
 				double r = Double.parseDouble(wireSpecs[8].getText());
 				double n = Double.parseDouble(wireSpecs[9].getText());
 				
-				Solenoid sol = (Solenoid)wire;			
+				Solenoid sol = (Solenoid)wire;				
 				sol.radius = r;
 				sol.height = h;
 				sol.turns = n;
 				sol.current = i;
 				sol.origin = new double[] {rx, ry, rz};
 				sol.direction = Calc.unit(new double[] {dx, dy, dz});
+				sol.plotStepScalar = scale;
 				sol.updateRotationMatrix();
-				sol.resetCache();
+				sol.resetCache();				
 			}
 			else if (wire instanceof StraightWire)
 			{
 				StraightWire str = (StraightWire)wire;
 				str.origin = new double[] {rx, ry, rz};
 				str.direction = Calc.unit(new double[] {dx, dy, dz});
+				str.plotStepScalar = scale;
 				str.current = i;
 				str.t2 = h;
 			}
@@ -1076,15 +1106,15 @@ public class GraphicUI extends JFrame
 			latticeBounds[2][2] = Integer.parseInt(latticeSpecs[2][2].getText());
 			
 			for (int i = 0; i < 3; i++)
-				if (latticeBounds[i][2] < 1)
-					latticeBounds[i][2] = 1;
+				if (latticeBounds[i][2] < 0)
+					latticeBounds[i][2] = 0;
 			
-			latticeBounds[0][0] = Integer.parseInt(latticeSpecs[0][0].getText());
-			latticeBounds[0][1] = Integer.parseInt(latticeSpecs[0][1].getText());
-			latticeBounds[1][0] = Integer.parseInt(latticeSpecs[1][0].getText());
-			latticeBounds[1][1] = Integer.parseInt(latticeSpecs[1][1].getText());
-			latticeBounds[2][0] = Integer.parseInt(latticeSpecs[2][0].getText());
-			latticeBounds[2][1] = Integer.parseInt(latticeSpecs[2][1].getText());				
+			latticeBounds[0][0] = Double.parseDouble(latticeSpecs[0][0].getText());
+			latticeBounds[0][1] = Double.parseDouble(latticeSpecs[0][1].getText());
+			latticeBounds[1][0] = Double.parseDouble(latticeSpecs[1][0].getText());
+			latticeBounds[1][1] = Double.parseDouble(latticeSpecs[1][1].getText());
+			latticeBounds[2][0] = Double.parseDouble(latticeSpecs[2][0].getText());
+			latticeBounds[2][1] = Double.parseDouble(latticeSpecs[2][1].getText());				
 		}
 		catch (Exception e)
 		{
@@ -1113,7 +1143,20 @@ public class GraphicUI extends JFrame
 			sim.remove(cube);
 			cube = new Cube(new double[] {0, 0, 0}, width, Color.black);
 			sim.add(cube);
-			refresh();
+		}
+		catch (Exception e)		
+		{
+			refreshRightFields();
+		}
+	}
+	
+	public void setProgressInterval()
+	{
+		try
+		{
+			int dn = Integer.parseInt(progressInterval.getText());
+			sim.progressInterval = dn;
+			System.out.println(dn);
 		}
 		catch (Exception e)		
 		{
@@ -1129,26 +1172,31 @@ public class GraphicUI extends JFrame
 		int yn = (int)(latticeBounds[1][2]);
 		int zn = (int)(latticeBounds[2][2]);
 		
-		double xmin = latticeBounds[0][0];
-		double xmax = latticeBounds[0][1];
-		double ymin = latticeBounds[1][0];
-		double ymax = latticeBounds[1][1];
-		double zmin = latticeBounds[2][0];
-		double zmax = latticeBounds[2][1];
-		
-		double dx = (xmax - xmin) / (xn - 1);
-		double dy = (xmax - xmin) / (yn - 1);
-		double dz = (xmax - xmin) / (zn - 1);
-		
-		// Store lattice points
-					
-		latticePoints = new double[xn*yn*zn][3];
-		int counter = 0;
-		
-		for (double i = xmin; i <= xmax; i += dx)
-			for (double j = ymin; j <= ymax; j += dy)
-				for (double k = zmin; k <= zmax; k += dz)		
-					latticePoints[counter++] = new double[] {i, j, k};
+		if (xn * yn * zn == 0)
+			latticePoints = new double[0][3];
+		else
+		{			
+			double xmin = latticeBounds[0][0];
+			double xmax = latticeBounds[0][1];
+			double ymin = latticeBounds[1][0];
+			double ymax = latticeBounds[1][1];
+			double zmin = latticeBounds[2][0];
+			double zmax = latticeBounds[2][1];
+			
+			double dx = (xmax - xmin) / (xn - 1);
+			double dy = (ymax - ymin) / (yn - 1);
+			double dz = (zmax - zmin) / (zn - 1);
+			
+			// Store lattice points
+						
+			latticePoints = new double[xn*yn*zn][3];
+			int counter = 0;
+			
+			for (double i = xmin; i <= xmax; i += dx)
+				for (double j = ymin; j <= ymax; j += dy)
+					for (double k = zmin; k <= zmax; k += dz)		
+						latticePoints[counter++] = new double[] {i, j, k};
+		}
 	}
 	
 	public void setPropagator(int rk)
@@ -1219,12 +1267,19 @@ public class GraphicUI extends JFrame
 			double py = Double.parseDouble(probeSpecs[0][1].getText());
 			double pz = Double.parseDouble(probeSpecs[0][2].getText());
 			probePoint = new double[] {px, py, pz};			
-			sim.simulate(new double[][] {probePoint}, false);			
+			sim.simulate(new double[][] {probePoint}, false, probeReading != null && !probePersist.isSelected());			
 			probeReading = sim.vectors.get(sim.vectors.size() - 1);
 			refresh();
 		}
 		catch (Exception e)
 		{
+			if (probeSpecs[0][0].getText().equals("") &&
+				probeSpecs[0][1].getText().equals("") &&
+				probeSpecs[0][2].getText().equals(""))
+			{
+				probePoint = null;
+				probeReading = null;
+			}
 			refreshRightFields();
 		}
 	}
@@ -1281,12 +1336,11 @@ public class GraphicUI extends JFrame
 			
 			// Load from file
 			
-			saveloader.loadSave();
-			message = "Successfully loaded from init.cfg.";
-			JOptionPane.showMessageDialog(GraphicUI.this, message, "Load State", JOptionPane.PLAIN_MESSAGE);			
+			saveloader.loadSave();						
 			setLattice();
-			setCube();
-			viewport.refresh();
+			setCube();			
+			message = "Successfully loaded from init.cfg.";
+			JOptionPane.showMessageDialog(GraphicUI.this, message, "Load State", JOptionPane.PLAIN_MESSAGE);
 		}
 		catch (Exception ex)
 		{
@@ -1357,8 +1411,12 @@ public class GraphicUI extends JFrame
 					setVectors();
 				else if (button.equals(probeBut))
 					setProbe();
-				else if (button.equals(cubeBut))
+				else if (button.equals(otherBut))
+				{
 					setCube();
+					setProgressInterval();
+					refresh();
+				}
 			}
 			else if (parent instanceof JComboBox)
 			{
@@ -1408,28 +1466,21 @@ public class GraphicUI extends JFrame
 				double dfov = sneaking ? fovIncrement / sneakFactor : fovIncrement;
 				if (name.equals("Load State"))
 				{
-					load();			
+					load();
+					refresh();
 				}
 				else if (name.equals("Save State"))
-				{
 					save();
-				}
+				else if (name.equals("Export to CSV"))
+					export();
 				else if (name.equals("Exit"))
-				{					
 					close();
-				}
 				else if (name.equals("Add solenoid"))
-				{
 					addSolenoid();
-				}
 				else if (name.equals("Add straight wire"))
-				{
 					addStraightWire();
-				}
 				else if (name.equals("Remove selected wire"))
-				{
 					removeSelectedWire();
-				}
 				else if (name.equals("Zoom in"))
 				{
 					viewport.scaleScreen(1/dzoom);
@@ -1487,8 +1538,18 @@ public class GraphicUI extends JFrame
 					refresh();
 				}
 				else if (name.equals("Refresh"))
-				{
 					refresh();
+				else if (name.equals("Controls"))
+				{
+					String message = "Shortcut keys:\n";
+					message += "Numpad 1: yaw left\n";
+					message += "Numpad 3: yaw r\n";
+					message += "Numpad 4: roll left\n";
+					message += "Numpad 6: roll right\n";
+					message += "Numpad 2: pitch down\n";
+					message += "Numpad 8: pitch up\n";										
+					message += "z: hold for finer adjustment\n";
+					JOptionPane.showMessageDialog(GraphicUI.this, message, "Controls", JOptionPane.PLAIN_MESSAGE);
 				}
 				else if (name.equals("About"))
 				{

@@ -25,6 +25,7 @@ public class Vector extends Line
 		this.direction = Calc.unit(direction);
 		this.t1 = 0;
 		this.color = color;
+		this.plotStepScalar = 1;
 		setScale(scale); 	
 		setArrowHeads();
 	}
@@ -37,7 +38,7 @@ public class Vector extends Line
 		arrowHead2.origin = r;
 	}
 	
-	private void setArrowHeads()
+	public void setArrowHeads()
 	{
 		double[] r = {0, t2, 0};
 		double[] m1 = {1, -4, 0};

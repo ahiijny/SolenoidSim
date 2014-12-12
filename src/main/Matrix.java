@@ -210,7 +210,6 @@ public class Matrix
 	{
 		int rA = A.length;
 		int rB = B.length;
-		int cA = A[0].length;
 		int cB = B[0].length;
 		
 		double[][] C = new double [rA][cB];

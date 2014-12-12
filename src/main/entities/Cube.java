@@ -17,6 +17,7 @@ public class Cube extends Entity
 	{
 		this.color = color;
 		this.width = width;
+		this.plotStepScalar = 1;
 		lines = new ArrayList<Line>(12);
 		
 		double[] r1 = {center[0] - width/2, center[1] + width/2, center[2] + width/2};

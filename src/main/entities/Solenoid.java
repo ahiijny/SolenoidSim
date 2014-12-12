@@ -32,6 +32,7 @@ public class Solenoid extends Entity implements Wire
 		this.turns = turns;
 		this.color = Color.black;
 		this.current = current;
+		this.plotStepScalar = 1;
 		updateRotationMatrix();
 	}
 	
@@ -67,10 +68,7 @@ public class Solenoid extends Entity implements Wire
 	
 	public int getPointCount(double ds)
 	{
-		int n = (int)((2* Math.PI * radius * turns + height)/ds);
-		if (height/turns < ds * 1.4)
-			n /= (ds * 1.4 * turns / height);
-		return n;
+		return (int)(plotStepScalar * (2* Math.PI * radius * turns + height)/ds);
 	}
 
 	@Override

@@ -11,20 +11,20 @@ import java.awt.image.BufferedImage;
 
 import javax.swing.JPanel;
 
-/** The polynomial \(ax^2 + bx + c\).
+/**
  * 
  * @author Jiayin
  *
  */
 public class Viewport extends JPanel 
 {
-	public static final double defaultFOV = Math.toRadians(40);
-	public static final double defaultScreen = 20;
-	public static final double defaultScale = 36;
-	public static final double defaultPlotStep = 0.025;
+	public static double defaultFOV = Math.toRadians(40);
+	public static double defaultZoom = 20;
+	public static double defaultScale = 36;
+	public static double defaultPlotStep = 0.025;
 	
-	public static final double maxFOV = Math.toRadians(121);
-	public static final double minFOV = Math.toRadians(9);
+	public static double maxFOV = Math.toRadians(121);
+	public static double minFOV = Math.toRadians(9);
 	
 	public GraphicUI parent;
 	public Sim sim;
@@ -70,9 +70,9 @@ public class Viewport extends JPanel
 	
 	public void defaultScale()
 	{
-		screen = Calc.scale(Calc.unit(screen), defaultScreen);
+		screen = Calc.scale(Calc.unit(screen), defaultZoom);
 		scale = defaultScale;
-		zoom = defaultScreen;
+		zoom = defaultZoom;
 		fov = defaultFOV;
 		enforceFOV();
 	}
@@ -95,8 +95,6 @@ public class Viewport extends JPanel
 	@Override
 	public void paintComponent(Graphics g)
 	{		
-		Calc.println(screen);
-		Calc.println(camera);
 		Graphics2D g2d = (Graphics2D)g;
 		AffineTransform at = AffineTransform.getScaleInstance(1, -1);
 		at.preConcatenate(AffineTransform.getTranslateInstance(0, size.height));
@@ -115,7 +113,6 @@ public class Viewport extends JPanel
              buffer = new BufferedImage(size.width, size.height, BufferedImage.TYPE_INT_RGB);
              bg = buffer.createGraphics();
              refresh();
-             System.out.println(size);
          }
 	}
 	
@@ -136,8 +133,8 @@ public class Viewport extends JPanel
 			
 			if (valid)
 			{
-				int x = (int)((scale*(point[0] + 0.5) + size.width/2)+0.5);
-				int y = (int)((scale*(point[1] + 0.5) + size.height/2)+0.5);								
+				int x = (int)((scale*(point[0]) + size.width/2)+0.5);
+				int y = (int)((scale*(point[1]) + size.height/2)+0.5);								
 				double distance = point[2];
 				
 				if (inbounds(x, y))

@@ -35,6 +35,7 @@ public class Line extends Entity
 		this.t1 = t1;
 		this.t2 = t2;
 		this.color = color;
+		this.plotStepScalar = 1;
 	}
 		
 	public double[][] getPoints(double ds)
@@ -51,6 +52,6 @@ public class Line extends Entity
 	
 	public int getPointCount(double ds)
 	{
-		return (int)((t2-t1)/ds);
+		return (int)(plotStepScalar * (t2-t1)/ds);
 	}
 }
