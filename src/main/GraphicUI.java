@@ -1524,7 +1524,6 @@ public class GraphicUI extends JFrame
 				else if (name.equals("Default sim step"))
 				{
 					sim.dt = Sim.defaultDt;
-					simulate();
 					refresh();
 				}
 				else if (name.equals("Default plot step"))
@@ -1543,7 +1542,7 @@ public class GraphicUI extends JFrame
 				{
 					String message = "Shortcut keys:\n";
 					message += "Numpad 1: yaw left\n";
-					message += "Numpad 3: yaw r\n";
+					message += "Numpad 3: yaw right\n";
 					message += "Numpad 4: roll left\n";
 					message += "Numpad 6: roll right\n";
 					message += "Numpad 2: pitch down\n";
