@@ -67,7 +67,10 @@ public class Solenoid extends Entity implements Wire
 	
 	public int getPointCount(double ds)
 	{
-		return (int)((2* Math.PI * radius * turns + height)/ds);
+		int n = (int)((2* Math.PI * radius * turns + height)/ds);
+		if (height/turns < ds * 1.4)
+			n /= (ds * 1.4 * turns / height);
+		return n;
 	}
 
 	@Override

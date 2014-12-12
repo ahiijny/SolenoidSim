@@ -95,6 +95,8 @@ public class Viewport extends JPanel
 	@Override
 	public void paintComponent(Graphics g)
 	{		
+		Calc.println(screen);
+		Calc.println(camera);
 		Graphics2D g2d = (Graphics2D)g;
 		AffineTransform at = AffineTransform.getScaleInstance(1, -1);
 		at.preConcatenate(AffineTransform.getTranslateInstance(0, size.height));

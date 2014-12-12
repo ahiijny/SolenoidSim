@@ -65,7 +65,7 @@ public class GraphicUI extends JFrame
 	public JComboBox<String> entitySel;
 	public JComboBox<String> rkSel;
 	public String[] specLabels = {"rx", "ry", "rz", "dx", "dy", "dz", "Current", "Length", "Radius", "Turns"};
-	public String[] propagatorLabels = {"Runge-Kutta, 1st order (RK1)", 
+	public String[] integratorLabels = {"Runge-Kutta, 1st order (RK1)", 
 			"Runge-Kutta, 2nd order (RK2)",								
 			"Runge-Kutta, 4th order (RK4)"};
 	public JTextField[] wireSpecs;
@@ -73,10 +73,12 @@ public class GraphicUI extends JFrame
 	public JTextField[][] latticeSpecs;
 	public JTextField simStep, zoom, scale, fov, plotStep, maxB, maxScale, 
 					arrowHeadThreshold, arrowHeadLength, minColor, maxColor, 
-					magB, process;	
-	public JButton specsBut, simBut, latticeBut, simStepBut, zoomBut, scaleBut, fovBut, plotStepBut, vectorBut, probeBut;
+					magB, cubeSpecs;	
+	public JButton specsBut, simBut, latticeBut, simStepBut, zoomBut, scaleBut, fovBut, plotStepBut, vectorBut, probeBut, cubeBut;
 	
-	public double[][] lattice;
+	public Cube cube;
+	
+	public double[][] latticePoints;
 	public double[] probePoint;
 	public Wire wire;		
 	public Vector probeReading;
@@ -84,18 +86,24 @@ public class GraphicUI extends JFrame
 	public int xorBack = Color.white.getRGB();
 	public int xorFront = Color.black.getRGB();
 	
-	public double[][] latticeValues = {	{-5, 5, 5},
+	public double[][] latticeBounds = {	{-5, 5, 5},
 										{-5, 5, 5},
 										{-5, 5, 5} };	
 	private Timer timer;
 	private int keyboardDelay = 50;	
 	private HashSet<String> pressedKeys;
-	private boolean sneaking = false;		
+	private boolean sneaking = false;	
+	
+	public Logger logger;
+	public SaveLoader saveloader;
+	
+	public String title;
 
 	public GraphicUI(String title, int width, int height)
 	{
 		super(title);
 		
+		this.title = title;
 		sim = new Sim(this);	
 		viewport = new Viewport(this, sim);
 		pressedKeys = new HashSet<String>();
@@ -105,17 +113,20 @@ public class GraphicUI extends JFrame
 		this.width = width;
 		this.height = height;
 		
+		logger = new Logger(sim);
+		saveloader = new SaveLoader(sim, "init.cfg");
+		
 		setContentPane(createContent());	
 		setJMenuBar(createMenuBar());
 		setKeyBindings();
 		initSim();
 		setLattice();
+		load();
 
 		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);	
-		setSize(width, height);	
+		setSize(width, height);			
 		setVisible(true);
-		
-		simulate();		
+		simulate();
 	}
 	
 	private JPanel createContent()
@@ -147,7 +158,6 @@ public class GraphicUI extends JFrame
 		JPanel vectorpane = new JPanel(new GridBagLayout());
 		JPanel probepane = new JPanel(new GridBagLayout());
 		JPanel statpane = new JPanel(new GridBagLayout());
-		JButton button; 
 		JLabel label;
 		GridBagConstraints c = new GridBagConstraints();
 		c.insets = new Insets(2,4,2,4);
@@ -266,13 +276,24 @@ public class GraphicUI extends JFrame
 		c.gridy = 0;
 		c.fill = GridBagConstraints.HORIZONTAL;
 		
-		title = new JLabel ("Process");
+		title = new JLabel ("Other settings");
 		title.setFont(new Font("Arial", Font.PLAIN, 14));
-		gridBagAdd(statpane, c, 0, 0, 4, GridBagConstraints.FIRST_LINE_START, title);
+		gridBagAdd(statpane, c, 0, 0, 2, GridBagConstraints.FIRST_LINE_START, title);
 		
-		process = new JTextField(30);
-		process.setEditable(false);
-		gridBagAdd(statpane, c, 0, 1, 4, GridBagConstraints.FIRST_LINE_START, process);
+		label = new JLabel("Cube length:");
+		label.setFont(new Font("Courier New", Font.PLAIN, 12));
+		gridBagAdd(statpane, c, 0, ++c.gridy, 1, GridBagConstraints.FIRST_LINE_START, label);
+		
+		cubeSpecs = new JTextField(20);
+		gridBagAdd(statpane, c, 1, c.gridy, 1, GridBagConstraints.FIRST_LINE_START, cubeSpecs);
+		
+		c.fill = GridBagConstraints.NONE;
+		
+		cubeBut = new JButton("Set");
+		cubeBut.addActionListener(new MyListener());
+		gridBagAdd(statpane, c, 0, ++c.gridy, 2, GridBagConstraints.CENTER, cubeBut);
+		
+		
 						
 		
 		// Add panels
@@ -290,7 +311,6 @@ public class GraphicUI extends JFrame
 		JPanel leftpane = new JPanel(new BorderLayout());
 		JPanel wirepane = new JPanel(new GridBagLayout());
 		JPanel simpane = new JPanel(new GridBagLayout());
-		JButton button; 
 		JLabel label;
 		GridBagConstraints c = new GridBagConstraints();
 		c.insets = new Insets(2,4,2,4);
@@ -456,8 +476,8 @@ public class GraphicUI extends JFrame
 		
 		rkSel = new JComboBox<String>();
 		rkSel.setPreferredSize(new Dimension(170, 20));
-		for (int i = 0; i < propagatorLabels.length; i++)			
-			rkSel.addItem(propagatorLabels[i]);		
+		for (int i = 0; i < integratorLabels.length; i++)			
+			rkSel.addItem(integratorLabels[i]);		
 		rkSel.setSelectedIndex(Sim.RK4);
 		rkSel.addActionListener(new MyListener());		
 		row2.add(label);
@@ -547,7 +567,7 @@ public class GraphicUI extends JFrame
 
 		// "File" Menu        
 		file = new JMenu ("File");
-		/*file.setMnemonic('f');
+		file.setMnemonic('f');
 		
 		button = new JMenuItem ("Load State");
 		button.setMnemonic('o');
@@ -562,7 +582,7 @@ public class GraphicUI extends JFrame
 				KeyEvent.VK_S, menuKeyMask));
 		button.addActionListener (new MenuListener ());
 		file.add(button);
-		
+		/*
 		button = new JMenuItem ("Export to CSV");
 		button.setMnemonic('x');
 		button.setAccelerator(KeyStroke.getKeyStroke (
@@ -676,12 +696,8 @@ public class GraphicUI extends JFrame
 	private void initSim()
 	{
 		double[] origin = {0, 0, 0};
-		double[] center = {0, -5, 0};
-		double[] m = {0, 1, 0};
-		Cube cube = new Cube(origin, 20, Color.black);
-		sim.add(cube);
-		sim.addWire(new Solenoid(1, center, m, 1, 10, 10));
-		//sim.addWire(new StraightWire(10, center, m, 200));	
+		cube = new Cube(origin, 15, Color.black);
+		sim.add(cube);	
 	}
 	
 	private void setKeyBindings()
@@ -858,9 +874,9 @@ public class GraphicUI extends JFrame
     	
     	for (int i = 0; i < 3; i++)
     		for (int j = 0; j < 2; j++)
-    			latticeSpecs[i][j].setText(Calc.small.format(latticeValues[i][j]));
+    			latticeSpecs[i][j].setText(Calc.small.format(latticeBounds[i][j]));
     	for (int i = 0; i < 3; i++)
-    		latticeSpecs[i][2].setText(Calc.whole.format(latticeValues[i][2]));
+    		latticeSpecs[i][2].setText(Calc.whole.format(latticeBounds[i][2]));
     }
     
     public void refreshBottomFields()
@@ -899,16 +915,22 @@ public class GraphicUI extends JFrame
     		for (int i = 0; i < 3; i++)
     			probeSpecs[1][i].setText(" ");
     		magB.setText(" ");
-    	}
+    	} 	
     	
+    	cubeSpecs.setText(Calc.smaller.format(cube.width));
     }
     
     public void simulate()
     {
-    	sim.simulate(lattice);
+    	sim.simulate(latticePoints);
     	if (probePoint != null)
     		setProbe();
     	refresh();
+    }
+    
+    public void updateProcess()
+    {
+    	setTitle(title + " (" + sim.process + ")");
     }
     
 	
@@ -994,19 +1016,8 @@ public class GraphicUI extends JFrame
 			refreshRightFields();
 		}
 		
-	}
+	}	
 	
-	public void setProcess(String str)	
-	{
-		try
-		{
-			process.setText(str);
-			repaint();
-		}
-		catch (Exception e)
-		{			
-		}		
-	}
 	public void setWireSpecs()
 	{
 		try
@@ -1060,20 +1071,20 @@ public class GraphicUI extends JFrame
 		{
 			// Read in values
 			
-			latticeValues[0][2] = Integer.parseInt(latticeSpecs[0][2].getText());
-			latticeValues[1][2] = Integer.parseInt(latticeSpecs[1][2].getText());
-			latticeValues[2][2] = Integer.parseInt(latticeSpecs[2][2].getText());
+			latticeBounds[0][2] = Integer.parseInt(latticeSpecs[0][2].getText());
+			latticeBounds[1][2] = Integer.parseInt(latticeSpecs[1][2].getText());
+			latticeBounds[2][2] = Integer.parseInt(latticeSpecs[2][2].getText());
 			
 			for (int i = 0; i < 3; i++)
-				if (latticeValues[i][2] < 1)
-					latticeValues[i][2] = 1;
+				if (latticeBounds[i][2] < 1)
+					latticeBounds[i][2] = 1;
 			
-			latticeValues[0][0] = Integer.parseInt(latticeSpecs[0][0].getText());
-			latticeValues[0][1] = Integer.parseInt(latticeSpecs[0][1].getText());
-			latticeValues[1][0] = Integer.parseInt(latticeSpecs[1][0].getText());
-			latticeValues[1][1] = Integer.parseInt(latticeSpecs[1][1].getText());
-			latticeValues[2][0] = Integer.parseInt(latticeSpecs[2][0].getText());
-			latticeValues[2][1] = Integer.parseInt(latticeSpecs[2][1].getText());				
+			latticeBounds[0][0] = Integer.parseInt(latticeSpecs[0][0].getText());
+			latticeBounds[0][1] = Integer.parseInt(latticeSpecs[0][1].getText());
+			latticeBounds[1][0] = Integer.parseInt(latticeSpecs[1][0].getText());
+			latticeBounds[1][1] = Integer.parseInt(latticeSpecs[1][1].getText());
+			latticeBounds[2][0] = Integer.parseInt(latticeSpecs[2][0].getText());
+			latticeBounds[2][1] = Integer.parseInt(latticeSpecs[2][1].getText());				
 		}
 		catch (Exception e)
 		{
@@ -1094,20 +1105,36 @@ public class GraphicUI extends JFrame
 		}
 	}
 	
+	public void setCube()
+	{
+		try
+		{
+			double width = Double.parseDouble(cubeSpecs.getText());
+			sim.remove(cube);
+			cube = new Cube(new double[] {0, 0, 0}, width, Color.black);
+			sim.add(cube);
+			refresh();
+		}
+		catch (Exception e)		
+		{
+			refreshRightFields();
+		}
+	}
+	
 	public void setLattice()
 	{
 		// Take parameters from latticeSpecs array
 		
-		int xn = (int)(latticeValues[0][2]);
-		int yn = (int)(latticeValues[1][2]);
-		int zn = (int)(latticeValues[2][2]);
+		int xn = (int)(latticeBounds[0][2]);
+		int yn = (int)(latticeBounds[1][2]);
+		int zn = (int)(latticeBounds[2][2]);
 		
-		double xmin = latticeValues[0][0];
-		double xmax = latticeValues[0][1];
-		double ymin = latticeValues[1][0];
-		double ymax = latticeValues[1][1];
-		double zmin = latticeValues[2][0];
-		double zmax = latticeValues[2][1];
+		double xmin = latticeBounds[0][0];
+		double xmax = latticeBounds[0][1];
+		double ymin = latticeBounds[1][0];
+		double ymax = latticeBounds[1][1];
+		double zmin = latticeBounds[2][0];
+		double zmax = latticeBounds[2][1];
 		
 		double dx = (xmax - xmin) / (xn - 1);
 		double dy = (xmax - xmin) / (yn - 1);
@@ -1115,16 +1142,13 @@ public class GraphicUI extends JFrame
 		
 		// Store lattice points
 					
-		lattice = new double[xn*yn*zn][3];
+		latticePoints = new double[xn*yn*zn][3];
 		int counter = 0;
 		
 		for (double i = xmin; i <= xmax; i += dx)
 			for (double j = ymin; j <= ymax; j += dy)
 				for (double k = zmin; k <= zmax; k += dz)		
-				{
-					lattice[counter++] = new double[] {i, j, k};
-					System.out.println(i + " " + j + " " + k);
-				}
+					latticePoints[counter++] = new double[] {i, j, k};
 	}
 	
 	public void setPropagator(int rk)
@@ -1244,6 +1268,60 @@ public class GraphicUI extends JFrame
 			refresh();
 		}
 	}
+	
+	public void load()
+	{
+		String message;
+		try
+		{
+			// Remove all Wires
+			
+			while (wire != null)
+				removeSelectedWire();
+			
+			// Load from file
+			
+			saveloader.loadSave();
+			message = "Successfully loaded from init.cfg.";
+			JOptionPane.showMessageDialog(GraphicUI.this, message, "Load State", JOptionPane.PLAIN_MESSAGE);			
+			setLattice();
+			setCube();
+			viewport.refresh();
+		}
+		catch (Exception ex)
+		{
+		}	
+	}
+	
+	public void save()
+	{
+		String message;
+		try
+		{
+			saveloader.writeSave();
+			message = "Successfully saved to init.cfg.";
+			JOptionPane.showMessageDialog(GraphicUI.this, message, "Save State", JOptionPane.PLAIN_MESSAGE);
+		}
+		catch (Exception ex)
+		{
+		}		
+	}
+	
+	public void export()
+	{
+		String message;
+		try
+		{
+			logger.log();
+			logger.write();
+			message = "Exported to data.csv.";						
+		}
+		catch (Exception ex)
+		{
+			message = ex.getLocalizedMessage();
+		}
+		JOptionPane.showMessageDialog(GraphicUI.this, message, "Export Data", JOptionPane.PLAIN_MESSAGE);
+	}
 		
 	private class MyListener implements ActionListener
 	{
@@ -1279,6 +1357,8 @@ public class GraphicUI extends JFrame
 					setVectors();
 				else if (button.equals(probeBut))
 					setProbe();
+				else if (button.equals(cubeBut))
+					setCube();
 			}
 			else if (parent instanceof JComboBox)
 			{
@@ -1326,7 +1406,15 @@ public class GraphicUI extends JFrame
 				String name = button.getText();
 				double dzoom = sneaking ? ((zoomInFactor - 1) / sneakFactor) + 1 : zoomInFactor;
 				double dfov = sneaking ? fovIncrement / sneakFactor : fovIncrement;
-				if (name.equals("Exit"))
+				if (name.equals("Load State"))
+				{
+					load();			
+				}
+				else if (name.equals("Save State"))
+				{
+					save();
+				}
+				else if (name.equals("Exit"))
 				{					
 					close();
 				}
@@ -1384,7 +1472,7 @@ public class GraphicUI extends JFrame
 				}
 				else if (name.equals("Default sim step"))
 				{
-					sim.dt = sim.defaultDt;
+					sim.dt = Sim.defaultDt;
 					simulate();
 					refresh();
 				}

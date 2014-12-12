@@ -27,10 +27,13 @@ public class Sim
 	public static final int B_X = 6;
 	public static final int B_Y = 7;
 	public static final int B_Z = 8;
-	
+			
 	public static final int RK1 = 0;
 	public static final int RK2 = 1;
 	public static final int RK4 = 2;
+	
+	public String[] integratorLabelsShort = {"RK1", "RK2", "RK4"};
+	public int[] integratorIndices = {RK1, RK2, RK4};
 	
 	public int integrationMethod = RK4;
 	
@@ -71,6 +74,8 @@ public class Sim
 	private Wire integratingWire;
 	
 	public GraphicUI parent;
+	
+	public String process = "";
 	
 	public Sim(GraphicUI parent) 
 	{
@@ -155,7 +160,9 @@ public class Sim
 				Vector vector = new Vector(point, direction, 1);
 				
 				vectors.add(vector);
-				parent.setProcess((i+1) + "/" + points.length);
+				process = (i+1) + "/" + points.length;
+				if ((i+1) % 100 == 0 || i == points.length - 1)
+					parent.updateProcess();
 			}
 			
 			for (Vector v : vectors)

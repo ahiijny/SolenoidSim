@@ -6,6 +6,7 @@ import java.util.ArrayList;
 public class Cube extends Entity
 {
 	public ArrayList<Line> lines;
+	public double width;
 	
 	public Cube(double[] center, double width, Color color)
 	{
@@ -15,6 +16,7 @@ public class Cube extends Entity
 	public Cube(double[] center, double width, double dt, Color color) 
 	{
 		this.color = color;
+		this.width = width;
 		lines = new ArrayList<Line>(12);
 		
 		double[] r1 = {center[0] - width/2, center[1] + width/2, center[2] + width/2};
