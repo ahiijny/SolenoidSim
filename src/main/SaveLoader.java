@@ -115,10 +115,10 @@ public class SaveLoader
 		{
 			out = new BufferedWriter(new OutputStreamWriter(
 					new FileOutputStream(path), "utf-8"));
+			out.write(getString(gui));
+			out.write(endl);
 			for (int i = 0; i < sim.wires.size(); i++)
-			{
-				out.write(getString(gui));
-				out.write(endl);
+			{				
 				out.write(getString(sim.wires.get(i)));
 				out.write(endl);
 			}
