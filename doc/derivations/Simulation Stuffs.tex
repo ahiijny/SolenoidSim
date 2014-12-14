@@ -25,7 +25,7 @@
 	
 	Simulation usually involves integration, for example for an object in free fall. In that case, we would have the variables $s$, $v$, $a$, and $t$. The most basic way of implementing integration in a computer program is Euler's method, which is basically choosing a very small time interval $h$ and then incrementing each variable by their derivative multiplied by $h$.
 
-	Say we have a ``vector'' $\bfvec{X} = (s, v, a)$, where $\bfvec{X}$ is a ``vector'' containing all of the variables in the system. Next, let $\bfvec{X'} = (v, a, 0)$, where $\bfvec{X'}$ is a ``vector'' containing the derivative of every variable in the system.
+	Say we have a ``vector'' $\bfvec{X} = (s, v)$, where $\bfvec{X}$ is a ``vector'' containing all of the variables in the system. Next, let $\bfvec{X'} = (v, a)$, where $\bfvec{X'}$ is a ``vector'' containing the derivative of every variable in the system.
 
 	Suppose that $\bfvec{X}_n$ is the value of the variables at time $t$ and that $\bfvec{X}_{n+1}$ is the value of the variables at time $t+h$. Then Euler's method is basically
 			$$\bfvec{X}_{n+1} = \bfvec{X}_n + h\,\bfvec{X'}_n$$			
@@ -34,7 +34,7 @@
 			$$x_2' = f_2(t_n, x_1,x_2,...,x_m)$$
 			$$...$$
 			$$x_m' = f_m(t_n, x_1,x_2,...,x_m)$$
-	Note that each function takes every other variable as an argument even though we don't necessarily need to use every variable. For example, in the free fall example, the derivative of acceleration would just be 0, which is not dependent on either position or velocity. But for ease of programming, we send all of those variables in as arguments anyway. Rather than cherry-picking which variable this derivative function will require, it's a lot easier to just send all of them and let the function decide which ones to use. 
+	Note that each function takes every other variable as an argument even though we don't necessarily need to use every variable. For example, in simplified free fall, the derivative of velocity would just be constant $g$, which is not dependent on either position or velocity. But for ease of programming, we send all of those variables in as arguments anyway. Rather than cherry-picking which variable this derivative function will require, it's a lot easier to just send all of them and let the function decide which ones to use. 
 	
 	These equations can be summarized in vector form as
 			$$\bfvec{X'} = \bfvec{f}(t_n, \bfvec{X})$$
@@ -97,7 +97,7 @@
 				1     & 439/216   & -8         & 3680/513    & -845/4104  & 0        & 0\\
 				1/2   & -8/27     & 2          & -3544/2565  & 1859/4104  & -11/40   & 0\\
 				\hline
-    		    0     & 16/135    & 0          & 6656/12825  & 28561/56430&-9/50     & 2/55\\
+    		          & 16/135    & 0          & 6656/12825  & 28561/56430&-9/50     & 2/55\\
 			\end{array}\]
 	The RK1 is a first order method, called the ``Forward Euler''. It lacks stability, which means any error introduced accumulates in a positive feedback loop. It also has significant accuracy limits, so it is not an ideal integration method if any accuracy is desired.
 	
