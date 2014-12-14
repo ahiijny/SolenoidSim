@@ -66,7 +66,7 @@
 			$$\bfvec{X}_{n+1} = \bfvec{X}_n + h \sum_{i=1}^s b_i k_i$$
 			$$k_i = \bfvec{f}\left(t_n + c_i h, \bfvec{X}_n + h \sum_{j = 1}^{s} a_{ij} k_j\right)$$
 
-	In the solenoid simulator, $t$ is not time but rather some parameter, but the general concept is the same. Our program only uses RK1, RK2 and RK4 because we couldn't find the Butcher tableau for any other ones. The Butcher tableau for the RK1 method that we used is:
+	In the solenoid simulator, $t$ is not time but rather some parameter, but the general concept is the same. The Butcher tableau for the RK1 method that we used is:
 			\[\begin{array}{c|c}
 				0 & 0 \\
 				\hline
@@ -88,13 +88,22 @@
 				\hline
     				& 1/6 & 1/3 & 1/3 & 1/6\\
 			\end{array}\]
+	The Butcher tableau for the RK5 method that we used is:
+			\[\begin{array}{c|cccccc}
+				0     & 0         & 0          & 0           & 0          & 0        & 0\\
+				1/4   & 1/4       & 0          & 0           & 0          & 0        & 0\\
+				3/8   & 3/32      & 9/32       & 0           & 0          & 0        & 0\\
+				12/13 & 1932/2197 & -7200/2197 & 7296/2197   & 0          & 0        & 0\\
+				1     & 439/216   & -8         & 3680/513    & -845/4104  & 0        & 0\\
+				1/2   & -8/27     & 2          & -3544/2565  & 1859/4104  & -11/40   & 0\\
+				\hline
+    		    0     & 16/135    & 0          & 6656/12825  & 28561/56430&-9/50     & 2/55\\
+			\end{array}\]
 	The RK1 is a first order method, called the ``Forward Euler''. It lacks stability, which means any error introduced accumulates in a positive feedback loop. It also has significant accuracy limits, so it is not an ideal integration method if any accuracy is desired.
 	
-	The RK2 is a second order method, called the ``Explicit midpoint method''. It is significantly more accurate than RK1. 
+	The RK2 is a second order method, called the ``Explicit midpoint method''.	The RK4 is a fourth order method; the ``original'' Runge-Kutta method. The RK5 is a fifth order method; the ``Runge-Kutta-Fehlberg method''.
 	
-	The RK4 is a fourth order method; the ``original'' Runge-Kutta method. It is more accurate than RK2.
-	
-	Both RK2 and RK4 algorithms exhibit elements of numerical stability, which is good because then any errors introduced in the numerical integration tend to be damped out. The effect of a higher-order RK method is basically to provide the same level of accuracy for a larger time interval, which reduces computational cost. 
+	All of the RK methods of order greater than 1 exhibit elements of numerical stability, which is good because then any errors introduced in the numerical integration tend to be damped out. The effect of a higher-order RK method is basically to provide the same level of accuracy for a larger time interval, which reduces computational cost. 
 	
 	\subsubsection*{Magnetism}
 	
@@ -226,6 +235,12 @@
 			&\text{\spaces4. }t_f = 2\pi n&
 		\end{flalign*}	
 	The only modification is that we have left multiplied the equations in 1 and 2 by the rotation matrix~$\mathbf{R}$. So now that we have $s(t)$ and $\diff s(t)$, we can use the Runge-Kutta algorithm of choice to integrate from $t_i$ to $t_f$ for each wire and sum the results of each wire to get the net $\vec{B}$ at point $\vec{P}$.
+	
+	\subsubsection*{Choosing a time interval}
+	
+	We want to ensure that our integration covers the entirety of the length of the wire and doesn't end prematurely because the chosen $dt$ doesn't divide wholly into $t_f - t_i$. Thus, the program chooses a custom time interval $h$ depending on the wire:
+			$$ h = \cfrac{t_f - t_i}{\left \lfloor \cfrac{t_f - t_i}{dt}\right \rceil}$$
+	Where $\lfloor \rceil$ denotes the nearest integer function and $dt$ denotes the time interval chosen by the user. The above formula gives the time interval closest in value to the chosen $dt$ that divides wholly into the wire parameterization. This improves accuracy.
 	
 	\subsubsection*{TODO:}
 	
