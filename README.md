@@ -10,8 +10,8 @@ Works Consulted:
 
 - "Magnetic Constant" : http://physics.nist.gov/cgi-bin/cuu/Value?mu0
   - For the calculations, using:
-    -μ0 = 4 Math.PI E-7
-    -note that in Java a 64-bit double gives ~16 significant figures of accuracy
+    - μ0 = 4 Math.PI E-7
+    - note that in Java a 64-bit double gives ~16 significant figures of accuracy
 - "Runge-Kutta Methods" : http://en.wikipedia.org/wiki/Runge%E2%80%93Kutta_methods
 - "Runge-Kutta Algorithm" : http://www.myphysicslab.com/runge_kutta.html
 - "List of Runge-Kutta Methods" : http://en.wikipedia.org/wiki/List_of_Runge%E2%80%93Kutta_methods
