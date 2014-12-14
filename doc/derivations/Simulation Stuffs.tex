@@ -142,8 +142,8 @@
 			$$\bfvec{X} = (\vec{P},\vec{s},\vec{B})$$
 			$$\bfvec{X'} = \left(\diff\vec{P},\diff\vec{s},\diff\vec{B}\right)$$
 	Recall that a Runge-Kutta algorithm is of the form
-			$$\bfvec{X}_{t+h} = \mathrm{rkn}(t,\bfvec{X}_t,\bfvec{X'}_t)$$
-	Thus, for each wire, we substitute $\bfvec{X}_0$ and $\bfvec{X'}_0$ and iterate until $t = t_f$, the end of the wire. So, the only thing to figure out now is the shape of the wire. 
+			$$\bfvec{X}_{t+h} = \mathrm{rkn}(t,h,\bfvec{X}_t)$$
+	where $\bfvec{X}_t$ is the state at time $t$ and $h$ is the time interval. Thus, for each wire, we substitute $t_i$, $h$ and $\bfvec{X}_0$ and iterate until $t = t_f$, the end of the wire. So, the only thing to figure out now is the shape of the wire. 
 	
 	\subsubsection*{The shape of the wire}
 		
