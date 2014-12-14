@@ -6,6 +6,8 @@ If prompted to choose a program to open the file, try Java/jre7/bin/javaw.exe. O
 
 The init.cfg file can be modified with text-editing software to customize the initial conditions.
 
+*** Clarification: "Scale plot step" multiplies the number of points rendered by the specified scalar, so if the UI is too laggy, decrease the value in that field.
+
 Works Consulted:
 
 - "Magnetic Constant" : http://physics.nist.gov/cgi-bin/cuu/Value?mu0
