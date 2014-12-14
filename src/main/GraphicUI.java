@@ -68,7 +68,8 @@ public class GraphicUI extends JFrame
 	public String[] specLabels = {"rx", "ry", "rz", "dx", "dy", "dz", "Current", "Length", "Radius", "Turns"};
 	public String[] integratorLabels = {"Runge-Kutta, 1st order (RK1)", 
 			"Runge-Kutta, 2nd order (RK2)",								
-			"Runge-Kutta, 4th order (RK4)"};
+			"Runge-Kutta, 4th order (RK4)",
+			"Runge-Kutta, 5th order (RK5)"};
 	public JTextField[] wireSpecs;
 	public JTextField[][] probeSpecs;
 	public JTextField[][] latticeSpecs;
@@ -907,8 +908,8 @@ public class GraphicUI extends JFrame
     
     public void refreshBottomFields()
 	{
-    	simStep.setText(Calc.small.format(sim.dt));
-    	zoom.setText(Calc.small.format(viewport.zoom));
+    	simStep.setText(Calc.smaller.format(sim.dt));
+    	zoom.setText(Calc.smaller.format(viewport.zoom));
 		scale.setText(Calc.small.format(viewport.scale));
 		fov.setText(Calc.whole.format(Math.toDegrees(viewport.fov)));
 		plotStep.setText(Calc.smaller.format(viewport.plotStep));		

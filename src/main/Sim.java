@@ -26,13 +26,15 @@ public class Sim
 	public static final int B_X = 6;
 	public static final int B_Y = 7;
 	public static final int B_Z = 8;
+	public static final int size = 9;
 			
 	public static final int RK1 = 0;
 	public static final int RK2 = 1;
 	public static final int RK4 = 2;
+	public static final int RK5 = 3;
 	
-	public String[] integratorLabelsShort = {"RK1", "RK2", "RK4"};
-	public int[] integratorIndices = {RK1, RK2, RK4};
+	public String[] integratorLabelsShort = {"RK1", "RK2", "RK4", "RK5"};
+	public int[] integratorIndices = {RK1, RK2, RK4, RK5};
 	
 	public int integrationMethod = RK4;
 	
@@ -62,6 +64,17 @@ public class Sim
 				{1/2.0, 0,     1/2.0, 0,     0},
 				{1,     0,     0,     1,     0},
 				{0,     1/6.0, 1/3.0, 1/3.0, 1/6.0}
+			}
+			,
+			{
+				{0, 0, 0, 0, 0, 0, 0},
+				{1/4.0, 1/4.0, 0, 0, 0, 0, 0},
+				{3/8.0, 3/32.0, 9/32.0, 0, 0, 0, 0},
+				{12/13.0, 1932/2197.0, -7200/2197.0, 7296/2197.0, 0, 0, 0},
+				{1, 439/216.0, -8, 3680/513.0, -845/4104.0, 0, 0}, 
+				{1/2.0, -8/27.0, 2, -3544/2565.0, 1859/4104.0, -11/40.0, 0}, 
+				{0, 16/135.0, 0, 6656/12825.0, 28561/56430.0, -9/50.0, 2/55.0}				
+				
 			}
 		}
 		;	
@@ -193,12 +206,23 @@ public class Sim
 		{
 			double t1 = w.get_t1();
 			double t2 = w.get_t2();
+			double t = t1;
+			
+			// Ensure that dt will eventually end up at exactly t2 after
+			// a number of iterations. This involves altering dt a bit from
+			// the desired value, but the variation shouldn't be too large
+			// (e.g. for a circular wire of 1 turn, dt = 0.5 -> dt =  0.48)
+			// and the resulting accuracy is much greater.
+			
+			double total_t = t2 - t1;
+			long count = Math.round(total_t / dt);
+			double h = total_t / count;
 			integratingWire = w;
 			
 			double[] vars = getVars(t1, w, point);
 			
-			for (double t = t1; t < t2; t += dt)
-				vars = rkn(t, dt, vars);
+			for (long i = 0; i < count; i++, t += h)
+				vars = rkn(t, h, vars);
 			
 			// Multiplying by the constant here at the end
 			// because it is constant throughout the integration,
@@ -218,7 +242,7 @@ public class Sim
 	
 	public double[] getVars(double t, Wire w, double[] point)
 	{
-		double[] vars = new double[10];
+		double[] vars = new double[size];
 		double[] s = w.get_s(t);
 		vars[P_X] = point[0];
 		vars[P_Y] = point[1];
@@ -242,7 +266,7 @@ public class Sim
 		double[] s = {vars[S_X], vars[S_Y], vars[S_Z]};		
 		double[] r = Calc.add(p, Calc.scale(s, -1));
 		double r_sqmag = Calc.sqmag(r);
-		double[] r_hat = Calc.unit(r);		
+		double[] r_hat = Calc.unit(r);
 		double[] dB = Calc.scale(Calc.cross(ds, r_hat), 1/r_sqmag);
 				
 		diff[P_X] = dp[0];
