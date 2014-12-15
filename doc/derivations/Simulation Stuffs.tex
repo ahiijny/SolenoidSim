@@ -103,7 +103,7 @@
 	
 	The RK2 is a second order method, called the ``Explicit midpoint method''.	The RK4 is a fourth order method; the ``original'' Runge-Kutta method. The RK5 is a fifth order method; the ``Runge-Kutta-Fehlberg method''.
 	
-	All of the RK methods of order greater than 1 exhibit elements of numerical stability, which is good because then any errors introduced in the numerical integration tend to be damped out. The effect of a higher-order RK method is basically to provide the same level of accuracy for a larger time interval, which reduces computational cost. 
+	All of the RK methods of order greater than 1 exhibit symptoms of numerical stability, which is good because then any errors introduced in the numerical integration tend to be damped out. The effect of a higher-order RK method is basically to provide the same level of accuracy for a larger time interval, which reduces computational cost. 
 	
 	\subsubsection*{Magnetism}
 	
@@ -217,14 +217,14 @@
 				\includegraphics[width=5cm]{6.png}
 				\caption{A rotated solenoid circling up along a $\hat{b}$ axis.} \label{im:6}		
 				\end{figure}	\\
-	Thus, for a solenoid rotated away from the default helix by rotation matrix $\mathbf{R}$:	
+	And finally, we can place the solenoid at an arbitrary position by simply adding a displacement vector to s(t). If we want the solenoid to be located at position vector $\vec{o}$, our new s(t) is simply $\vec{o}$~+~s(t). Because we are just adding a constant, this does not affect the derivative in any way. Thus, for a solenoid rotated away from the default helix by rotation matrix $\mathbf{R}$:	
 	\begin{flalign*} 
-			&\text{\spaces1. }s(t) = \mathbf{R}
+			&\text{\spaces1. }s(t) = \vec{o} + \mathbf{R}
 				\begin{bmatrix}
 					r\cos(t) \\
 					r\sin(t) \\
 					\frac{L}{2\pi n}t
-				\end{bmatrix} \\
+				\end{bmatrix}\\
 			&\text{\spaces2. }\diff s(t) = \mathbf{R}
 				\begin{bmatrix}
 					-r\sin(t) \\
