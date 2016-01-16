@@ -1,14 +1,12 @@
-﻿Models the B field of multiple solenoids.
+﻿## Magnetic Field Simulator
 
-To run the program, run SollySim.jar. 
+Models the B field of currents going through straight wires or solenoids. The init.cfg file can be modified with text-editing software to customize the initial conditions.
 
-If prompted to choose a program to open the file, try Java/jre7/bin/javaw.exe. Or with jre8 or whatever.
-
-The init.cfg file can be modified with text-editing software to customize the initial conditions.
+![Fun colourful arrows indicating the B field around a solenoid](screenshot.png?raw=true)
 
 *** Clarification: "Scale plot step" multiplies the number of points rendered by the specified scalar, so if the UI is too laggy, decrease the value in that field.
 
-Works Consulted:
+## Works Consulted:
 
 - "Magnetic Constant" : http://physics.nist.gov/cgi-bin/cuu/Value?mu0
   - For the calculations, using:
