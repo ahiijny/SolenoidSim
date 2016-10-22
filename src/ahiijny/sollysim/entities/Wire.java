@@ -1,4 +1,4 @@
-package main.entities;
+package ahiijny.sollysim.entities;
 
 public interface Wire
 {

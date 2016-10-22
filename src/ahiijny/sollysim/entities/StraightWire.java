@@ -1,8 +1,8 @@
-package main.entities;
+package ahiijny.sollysim.entities;
 
 import java.awt.Color;
 
-import main.Calc;
+import ahiijny.sollysim.Calc;
 
 public class StraightWire extends Line implements Wire 
 {	

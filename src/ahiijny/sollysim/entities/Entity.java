@@ -1,4 +1,4 @@
-package main.entities;
+package ahiijny.sollysim.entities;
 import java.awt.Color;
 
 public abstract class Entity 

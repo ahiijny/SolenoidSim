@@ -1,10 +1,10 @@
-package main;
+package ahiijny.sollysim;
 import java.io.BufferedWriter;
 import java.io.FileWriter;
 
-import main.entities.Solenoid;
-import main.entities.Vector;
-import main.entities.Wire;
+import ahiijny.sollysim.entities.Solenoid;
+import ahiijny.sollysim.entities.Vector;
+import ahiijny.sollysim.entities.Wire;
 
 public class Logger 
 {

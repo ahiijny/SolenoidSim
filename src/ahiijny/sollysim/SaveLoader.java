@@ -1,4 +1,4 @@
-package main;
+package ahiijny.sollysim;
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.File;
@@ -8,11 +8,11 @@ import java.io.OutputStreamWriter;
 
 import javax.swing.JOptionPane;
 
-import main.entities.Entity;
-import main.entities.Solenoid;
-import main.entities.StraightWire;
-import main.entities.Vector;
-import main.entities.Wire;
+import ahiijny.sollysim.entities.Entity;
+import ahiijny.sollysim.entities.Solenoid;
+import ahiijny.sollysim.entities.StraightWire;
+import ahiijny.sollysim.entities.Vector;
+import ahiijny.sollysim.entities.Wire;
 
 
 public class SaveLoader 

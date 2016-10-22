@@ -1,4 +1,4 @@
-package main.entities;
+package ahiijny.sollysim.entities;
 
 import java.awt.Color;
 import java.util.ArrayList;

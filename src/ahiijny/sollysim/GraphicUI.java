@@ -1,4 +1,4 @@
-package main;
+package ahiijny.sollysim;
 
 import java.awt.BorderLayout;
 import java.awt.Color;
@@ -36,11 +36,11 @@ import javax.swing.JTextField;
 import javax.swing.KeyStroke;
 import javax.swing.Timer;
 
-import main.entities.Cube;
-import main.entities.Solenoid;
-import main.entities.StraightWire;
-import main.entities.Vector;
-import main.entities.Wire;
+import ahiijny.sollysim.entities.Cube;
+import ahiijny.sollysim.entities.Solenoid;
+import ahiijny.sollysim.entities.StraightWire;
+import ahiijny.sollysim.entities.Vector;
+import ahiijny.sollysim.entities.Wire;
 
 /** Referenced http://tips4java.wordpress.com/2013/06/09/motion-using-the-keyboard/
  * for key bindings.
@@ -611,7 +611,7 @@ public class GraphicUI extends JFrame
 		file.add(new JSeparator());
 
 		button = new JMenuItem ("Exit"); // exit button
-		button.setMnemonic('x');
+		button.setMnemonic('e');
 		button.addActionListener (new MenuListener ());
 		file.add(button);
 		

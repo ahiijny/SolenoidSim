@@ -1,4 +1,4 @@
-package main;
+package ahiijny.sollysim;
 
 /** Static class that performs various matrix operations.
  * Referenced rotation matrices from: http://en.wikipedia.org/wiki/Rotation_matrix

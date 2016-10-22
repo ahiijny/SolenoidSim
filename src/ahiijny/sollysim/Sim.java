@@ -1,11 +1,11 @@
-package main;
+package ahiijny.sollysim;
 
 import java.util.ArrayList;
 import java.util.Collection;
 
-import main.entities.Entity;
-import main.entities.Vector;
-import main.entities.Wire;
+import ahiijny.sollysim.entities.Entity;
+import ahiijny.sollysim.entities.Vector;
+import ahiijny.sollysim.entities.Wire;
 
 /** BIOTSAVART
  * http://www.myphysicslab.com/runge_kutta.html

@@ -1,4 +1,4 @@
-package main;
+package ahiijny.sollysim;
 
 import javax.swing.UIManager;
 

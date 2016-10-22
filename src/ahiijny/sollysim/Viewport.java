@@ -1,4 +1,4 @@
-package main;
+package ahiijny.sollysim;
 import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.Graphics;

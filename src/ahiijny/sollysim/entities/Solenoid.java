@@ -1,9 +1,9 @@
-package main.entities;
+package ahiijny.sollysim.entities;
 
 import java.awt.Color;
 
-import main.Calc;
-import main.Matrix;
+import ahiijny.sollysim.Calc;
+import ahiijny.sollysim.Matrix;
 
 public class Solenoid extends Entity implements Wire
 {
